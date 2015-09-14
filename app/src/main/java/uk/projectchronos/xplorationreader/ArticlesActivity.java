@@ -1,9 +1,17 @@
 package uk.projectchronos.xplorationreader;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import retrofit.Call;
+import retrofit.Callback;
+import retrofit.GsonConverterFactory;
+import retrofit.Response;
+import retrofit.Retrofit;
+import uk.projectchronos.xplorationreader.api.ProjectChronosService;
+import uk.projectchronos.xplorationreader.model.ResponseArticlesList;
 import uk.projectchronos.xplorationreader.utils.BaseActivityWithToolbar;
 
 public class ArticlesActivity extends BaseActivityWithToolbar {
@@ -21,6 +29,33 @@ public class ArticlesActivity extends BaseActivityWithToolbar {
         // Disable default home as up
         getSupportActionBar().setDisplayHomeAsUpEnabled(false);
         getSupportActionBar().setTitle(R.string.title_activity_articles);
+
+
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl("http://hypermedia.projectchronos.eu/")
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+
+        ProjectChronosService service = retrofit.create(ProjectChronosService.class);
+
+        Call<ResponseArticlesList> articles = service.articles();
+        articles.enqueue(new Callback<ResponseArticlesList>() {
+            @Override
+            public void onResponse(Response<ResponseArticlesList> response) {
+                if (response.isSuccess()) {
+                    Log.i(TAG, response.body().toString());
+                    Log.i(TAG, response.body().getArticles().get(9).toString());
+                } else {
+                    Log.e(TAG, response.errorBody().toString());
+                }
+            }
+
+            @Override
+            public void onFailure(Throwable t) {
+                Log.e(TAG, t.getMessage());
+            }
+        });
+
     }
 
     @Override
