@@ -3,6 +3,9 @@ package uk.projectchronos.xplorationreader.model;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
+/**
+ * Class that represent article.
+ */
 public class Article {
 
     @Expose
