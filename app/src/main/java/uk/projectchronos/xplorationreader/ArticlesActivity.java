@@ -50,6 +50,9 @@ public class ArticlesActivity extends BaseActivityWithToolbar {
     @SuppressWarnings("ConstantConditions")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        // Make sure this is before calling super.onCreate in order to set the right theme and remove the launcher theme
+        setTheme(R.style.AppTheme);
+
         super.onCreate(savedInstanceState);
 
         // Disable default home as up
