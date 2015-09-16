@@ -4,4 +4,6 @@
 
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
+    <!-- TODO: remove after -->
+    <string name="action_try_tab">Try Tab</string>
 </resources>

@@ -1,6 +1,15 @@
 package uk.projectchronos.xplorationreader;
 
+import android.content.ComponentName;
+import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.os.Bundle;
+import android.support.customtabs.CustomTabsCallback;
+import android.support.customtabs.CustomTabsClient;
+import android.support.customtabs.CustomTabsIntent;
+import android.support.customtabs.CustomTabsServiceConnection;
+import android.support.customtabs.CustomTabsSession;
+import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -20,6 +29,7 @@ import uk.projectchronos.xplorationreader.api.ProjectChronosService;
 import uk.projectchronos.xplorationreader.model.Article;
 import uk.projectchronos.xplorationreader.model.ResponseArticlesList;
 import uk.projectchronos.xplorationreader.utils.BaseActivityWithToolbar;
+import uk.projectchronos.xplorationreader.utils.CustomTabsHelper;
 import uk.projectchronos.xplorationreader.utils.HTTPUtil;
 
 /**
@@ -42,6 +52,21 @@ public class ArticlesActivity extends BaseActivityWithToolbar {
      */
     private String next;
 
+    /**
+     * Custom Tabs Session.
+     */
+    private CustomTabsSession customTabsSession;
+
+    /**
+     * Custom Tabs Client.
+     */
+    private CustomTabsClient customTabsClient;
+
+    /**
+     * Custom Tabs Service Connection.
+     */
+    private CustomTabsServiceConnection customTabsServiceConnection;
+
     @Override
     protected int getLayoutResourceId() {
         return R.layout.activity_articles;
@@ -61,6 +86,45 @@ public class ArticlesActivity extends BaseActivityWithToolbar {
 
         // Get articles
         getArticles(null);
+
+        // Prepare custom tab
+        prepareCustomTab();
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.menu_articles, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
+        int id = item.getItemId();
+
+        switch (id) {
+
+            case R.id.action_settings:
+                return true;
+
+            case R.id.action_try_tab:
+                Uri uri = Uri.parse("http://www.esa.int/Our_Activities/Launchers/Launcher_Technology/Materials_structure_and_stages");
+                launchCustomTabs(uri);
+                return true;
+
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        // Release service
+        unbindCustomTabsService();
+        super.onDestroy();
     }
 
     /**
@@ -97,8 +161,9 @@ public class ArticlesActivity extends BaseActivityWithToolbar {
                     // Get next page from next url
                     String nextUrl = responseArticlesList.getNext();
                     try {
-                        Log.i(TAG, String.format("Total articles downloaded: %d\nArticles: %s", articleList.size(), articleList.toString()));
-                        Log.i(TAG, String.format("NextUrl: %s", nextUrl));
+                        if (BuildConfig.DEBUG)
+                            Log.i(TAG, String.format("Total articles downloaded: %d\nArticles: %s", articleList.size(), articleList.toString()));
+                        if (BuildConfig.DEBUG) Log.i(TAG, String.format("NextUrl: %s", nextUrl));
 
                         next = HTTPUtil.splitQuery(new URL(nextUrl)).get("bookmark").get(0);
 
@@ -125,25 +190,132 @@ public class ArticlesActivity extends BaseActivityWithToolbar {
         });
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_articles, menu);
-        return true;
-    }
+    /**
+     * Prepare all the stuffs in order to use an optimezed CustomTabs.
+     */
+    private void prepareCustomTab() {
+        // Bind to the custom tab service
+        bindCustomTabsService();
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
+        // Warmup the browser process
+        if (customTabsClient != null) {
+            customTabsClient.warmup(0);
         }
 
-        return super.onOptionsItemSelected(item);
+        // Get actual session and prefetch some contents
+        customTabsSession = getSession();
+        if (customTabsClient != null) {
+            // TODO: pass the entire list of url fetched
+            customTabsSession.mayLaunchUrl(Uri.parse("http://www.esa.int/Our_Activities/Launchers/Launcher_Technology/Materials_structure_and_stages"), null, null);
+        }
+    }
+
+    /**
+     * This method sets all UI of our CustomTabs and after launch the page of the requested URI.
+     *
+     * @param uri the URI to open into our custom CustomTabs.
+     */
+    private void launchCustomTabs(Uri uri) {
+        CustomTabsIntent customTabsIntent = new CustomTabsIntent.Builder(getSession())
+                .setToolbarColor(ContextCompat.getColor(this, R.color.primary))
+                .setCloseButtonIcon(BitmapFactory.decodeResource(getResources(), R.drawable.ic_arrow_back))
+                .setStartAnimations(this, R.anim.slide_in_right, R.anim.slide_out_left)
+                .setExitAnimations(this, R.anim.slide_in_left, R.anim.slide_out_right)
+                .setShowTitle(true)
+                .build();
+
+        CustomTabsHelper.addKeepAliveExtra(this, customTabsIntent.intent);
+        customTabsIntent.launchUrl(this, uri);
+    }
+
+    /**
+     * Gets the actual CustomTabsSession.
+     * If one is ready returns it, otherwise creates one with a navigation event callback.
+     *
+     * @return null in case of there is not a CustomTabsClient, customTabsSession oterwhise.
+     */
+    private CustomTabsSession getSession() {
+        if (customTabsClient == null) {
+            customTabsSession = null;
+        } else if (customTabsSession == null) {
+            customTabsSession = customTabsClient.newSession(new CustomTabsCallback() {
+                @Override
+                public void onNavigationEvent(int navigationEvent, Bundle extras) {
+                    switch (navigationEvent) {
+                        case 1:
+                            if (BuildConfig.DEBUG) Log.i(TAG, "Navigation started");
+                            break;
+                        case 2:
+                            if (BuildConfig.DEBUG) Log.i(TAG, "Navigation finished");
+                            // TODO: maybe we can set article read after this event
+                            break;
+                        case 3:
+                            if (BuildConfig.DEBUG) Log.i(TAG, "Navigation failed");
+                            break;
+                        case 4:
+                            if (BuildConfig.DEBUG) Log.i(TAG, "Navigation aborted");
+                            break;
+                        case 5:
+                            if (BuildConfig.DEBUG) Log.i(TAG, "Tab shown");
+                            break;
+                        case 6:
+                            if (BuildConfig.DEBUG) Log.i(TAG, "Tab hidden");
+                            break;
+                        default:
+                            break;
+                    }
+                }
+            });
+        }
+
+        return customTabsSession;
+    }
+
+    /**
+     * Allocate resources for CustomTabs.
+     */
+    private void bindCustomTabsService() {
+        if (customTabsClient != null) {
+            return;
+        }
+
+        // Get package name to use in binding
+        String packageNameToBind = CustomTabsHelper.getPackageNameToUse(this);
+        if (packageNameToBind == null) {
+            return;
+        }
+
+        // Create new CustomTabsService
+        customTabsServiceConnection = new CustomTabsServiceConnection() {
+            @Override
+            public void onCustomTabsServiceConnected(ComponentName name, CustomTabsClient client) {
+                if (BuildConfig.DEBUG) Log.i(TAG, "Custom Tabs Service connected!");
+                customTabsClient = client;
+            }
+
+            @Override
+            public void onServiceDisconnected(ComponentName name) {
+                if (BuildConfig.DEBUG) Log.i(TAG, "Custom Tabs Service disconnected!");
+                customTabsClient = null;
+            }
+        };
+
+        // Bind it!
+        if (!CustomTabsClient.bindCustomTabsService(this, packageNameToBind, customTabsServiceConnection)) {
+            customTabsServiceConnection = null;
+        }
+    }
+
+    /**
+     * Release all resources used for CustomTabs.
+     */
+    private void unbindCustomTabsService() {
+        if (customTabsServiceConnection == null) {
+            return;
+        }
+
+        unbindService(customTabsServiceConnection);
+        customTabsClient = null;
+        customTabsSession = null;
     }
 }

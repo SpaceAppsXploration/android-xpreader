@@ -7,4 +7,10 @@
         android:orderInCategory="100"
         android:title="@string/action_settings"
         app:showAsAction="never" />
+    <!-- TODO: remove after -->
+    <item
+        android:id="@+id/action_try_tab"
+        android:orderInCategory="100"
+        android:title="@string/action_try_tab"
+        app:showAsAction="never" />
 </menu>

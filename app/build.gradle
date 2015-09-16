@@ -6,7 +6,7 @@ android {
 
     defaultConfig {
         applicationId "uk.projectchronos.xplorationreader"
-        minSdkVersion 11
+        minSdkVersion 15 // Now the 95.7% of Android Device supported
         targetSdkVersion 23
         versionCode 1
         versionName "1.0"
@@ -25,4 +25,5 @@ dependencies {
     compile 'com.squareup.retrofit:retrofit:2.0.0-beta1'
     compile 'com.squareup.retrofit:converter-gson:2.0.0-beta1'
     compile 'com.google.code.gson:gson:2.3.1'
+    compile 'com.android.support:customtabs:23.0.1'
 }
