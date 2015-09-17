@@ -1,10 +1,28 @@
+/*
+ * Copyright 2014-2015 Project Chronos and Pramantha Ltd
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ */
+
 package uk.projectchronos.xplorationreader.model;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
+import java.util.List;
+
 /**
- * Class that represent article.
+ * Class that represent an article.
  */
 public class Article {
 
@@ -19,8 +37,10 @@ public class Article {
     private String stored;
     @Expose
     private Object published;
+    @SerializedName("keywords")
     @Expose
-    private String keywords;
+    private String keywordsUrl;
+    private List<Keyword> keywordList;
 
     /**
      * Gets the title of the article.
@@ -113,21 +133,39 @@ public class Article {
     }
 
     /**
-     * Gets the keywords url of the article.
+     * Gets the keywordList url of the article.
      *
-     * @return the keywords url.
+     * @return the keywordList url.
      */
-    public String getKeywords() {
-        return keywords;
+    public String getKeywordsUrl() {
+        return keywordsUrl;
     }
 
     /**
-     * Sets the keywords url of the article.
+     * Sets the keywordList url of the article.
      *
-     * @param keywords the keywords url to set.
+     * @param keywordsUrl the keywordList url to set.
      */
-    public void setKeywords(String keywords) {
-        this.keywords = keywords;
+    public void setKeywordsUrl(String keywordsUrl) {
+        this.keywordsUrl = keywordsUrl;
+    }
+
+    /**
+     * Gets the keywordList list of the article.
+     *
+     * @return the keywordList list.
+     */
+    public List<Keyword> getKeywordList() {
+        return keywordList;
+    }
+
+    /**
+     * Sets the keywordList list of the article.
+     *
+     * @param keywordList the keywordList to add.
+     */
+    public void setKeywordList(List<Keyword> keywordList) {
+        this.keywordList = keywordList;
     }
 
     @Override
@@ -138,7 +176,8 @@ public class Article {
                 ", _abstract='" + _abstract + '\'' +
                 ", stored='" + stored + '\'' +
                 ", published=" + published +
-                ", keywords='" + keywords + '\'' +
+                ", keywordsUrl='" + keywordsUrl + '\'' +
+                ", keywordList=" + keywordList +
                 '}';
     }
 }

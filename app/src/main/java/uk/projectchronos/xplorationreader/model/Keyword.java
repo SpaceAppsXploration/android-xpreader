@@ -14,25 +14,40 @@
  *    limitations under the License.
  */
 
-package uk.projectchronos.xplorationreader.api;
-
-
-import java.util.List;
-
-import retrofit.Call;
-import retrofit.http.GET;
-import retrofit.http.Query;
-import uk.projectchronos.xplorationreader.model.Keyword;
-import uk.projectchronos.xplorationreader.model.ResponseArticlesList;
+package uk.projectchronos.xplorationreader.model;
 
 /**
- * Interface with all API call to ProjectChronos service.
+ * Class that represent a keyword.
  */
-public interface ProjectChronosService {
+public class Keyword {
 
-    @GET("visualize/articles/?api=true")
-    Call<ResponseArticlesList> getArticles(@Query("bookmark") String bookmark);
+    /**
+     * The keyword value itself.
+     */
+    private String keyword;
 
-    @GET("visualize/articles/?api=true")
-    Call<List<Keyword>> getKeywords(@Query("url") String url);
+    /**
+     * Gets the keyword's value.
+     *
+     * @return keyword value.
+     */
+    public String getKeyword() {
+        return keyword;
+    }
+
+    /**
+     * Sets the keyword value.
+     *
+     * @param keyword the string to set.
+     */
+    public void setKeyword(String keyword) {
+        this.keyword = keyword;
+    }
+
+    @Override
+    public String toString() {
+        return "Keyword{" +
+                "keyword='" + keyword + '\'' +
+                '}';
+    }
 }

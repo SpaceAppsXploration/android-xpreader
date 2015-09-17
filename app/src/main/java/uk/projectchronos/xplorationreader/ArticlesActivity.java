@@ -1,3 +1,19 @@
+/*
+ * Copyright 2014-2015 Project Chronos and Pramantha Ltd
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ */
+
 package uk.projectchronos.xplorationreader;
 
 import android.content.ComponentName;
@@ -14,6 +30,9 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -25,8 +44,10 @@ import retrofit.Callback;
 import retrofit.GsonConverterFactory;
 import retrofit.Response;
 import retrofit.Retrofit;
+import uk.projectchronos.xplorationreader.api.KeywordAdapterFactory;
 import uk.projectchronos.xplorationreader.api.ProjectChronosService;
 import uk.projectchronos.xplorationreader.model.Article;
+import uk.projectchronos.xplorationreader.model.Keyword;
 import uk.projectchronos.xplorationreader.model.ResponseArticlesList;
 import uk.projectchronos.xplorationreader.utils.BaseActivityWithToolbar;
 import uk.projectchronos.xplorationreader.utils.CustomTabsHelper;
@@ -67,6 +88,11 @@ public class ArticlesActivity extends BaseActivityWithToolbar {
      */
     private CustomTabsServiceConnection customTabsServiceConnection;
 
+    /**
+     * ProjectChronosService that allow to access to articles and keywords API.
+     */
+    private ProjectChronosService projectChronosService;
+
     @Override
     protected int getLayoutResourceId() {
         return R.layout.activity_articles;
@@ -83,6 +109,9 @@ public class ArticlesActivity extends BaseActivityWithToolbar {
         // Disable default home as up
         getSupportActionBar().setDisplayHomeAsUpEnabled(false);
         getSupportActionBar().setTitle(R.string.title_activity_articles);
+
+        // Create service
+        createProjectChronosService();
 
         // Get articles
         getArticles(null);
@@ -104,7 +133,7 @@ public class ArticlesActivity extends BaseActivityWithToolbar {
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
-
+        // TODO: remove after
         switch (id) {
 
             case R.id.action_settings:
@@ -128,6 +157,25 @@ public class ArticlesActivity extends BaseActivityWithToolbar {
     }
 
     /**
+     *
+     */
+    private void createProjectChronosService() {
+        // Create new Gson throw GsonBuilder in order to extend it and parse a String[] of keywords
+        // into a List<Keyword> thanks to KeywordAdapter
+        Gson gson = new GsonBuilder()
+                .registerTypeAdapterFactory(new KeywordAdapterFactory())
+                .create();
+
+        // Create Retrofit service with our KeywordAdapter
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl(BASE_URL)
+                .addConverterFactory(GsonConverterFactory.create(gson))
+                .build();
+
+        projectChronosService = retrofit.create(ProjectChronosService.class);
+    }
+
+    /**
      * Get articles with Retrofit service from
      * http://hypermedia.projectchronos.eu/visualize/articles/?api=true and set them and next page
      * in class's private variables.
@@ -138,20 +186,12 @@ public class ArticlesActivity extends BaseActivityWithToolbar {
      * @param bookmark the bookmark to get. If it is null it retrieves the base page.
      */
     private void getArticles(String bookmark) {
-        // Create Retrofit service
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(BASE_URL)
-                .addConverterFactory(GsonConverterFactory.create())
-                .build();
-
-        ProjectChronosService service = retrofit.create(ProjectChronosService.class);
-
         // Create asynchronous call
-        Call<ResponseArticlesList> articles = service.getArticles(bookmark);
+        Call<ResponseArticlesList> articles = projectChronosService.getArticles(bookmark);
         articles.enqueue(new Callback<ResponseArticlesList>() {
             @Override
             public void onResponse(Response<ResponseArticlesList> response) {
-                if (response.isSuccess()) {
+                if (response.isSuccess() && response.body() != null) {
                     // Get response's body
                     ResponseArticlesList responseArticlesList = response.body();
 
@@ -167,7 +207,11 @@ public class ArticlesActivity extends BaseActivityWithToolbar {
 
                         next = HTTPUtil.splitQuery(new URL(nextUrl)).get("bookmark").get(0);
 
-                        //getArticles(next); // TODO: to be removed
+                        // For all articles get associated keywords list
+                        for (Article article : articleList) {
+                            getKeywords(article, HTTPUtil.splitQuery(new URL(article.getKeywordsUrl())).get("url").get(0));
+                        }
+
                     } catch (MalformedURLException e) {
                         Log.e(TAG, String.format("%s could not be parsed as a URL", nextUrl), e);
                         //TODO: last call return a null next parameter, manage in order to avoid silly connections
@@ -189,6 +233,38 @@ public class ArticlesActivity extends BaseActivityWithToolbar {
             }
         });
     }
+
+    private void getKeywords(final Article article, String url) {
+        // Create asynchronous call
+        Call<List<Keyword>> keywords = projectChronosService.getKeywords(url);
+        keywords.enqueue(new Callback<List<Keyword>>() {
+            @Override
+            public void onResponse(Response<List<Keyword>> response) {
+                if (response.isSuccess()) {
+                    if (BuildConfig.DEBUG) Log.i(TAG, String.valueOf(response.body()));
+                    // Get response's body
+                    article.setKeywordList(response.body());
+
+                    if (BuildConfig.DEBUG) Log.i(TAG, article.toString());
+
+                } else {
+                    // TODO: manage in better way error
+                    try {
+                        Log.e(TAG, response.errorBody().string());
+                    } catch (IOException e) {
+                        Log.e(TAG, "onResponse", e);
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(Throwable t) {
+                // TODO: manage in better way error
+                Log.e(TAG, "Error in onFailure", t);
+            }
+        });
+    }
+
 
     /**
      * Prepare all the stuffs in order to use an optimezed CustomTabs.
