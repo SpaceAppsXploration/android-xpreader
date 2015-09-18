@@ -260,7 +260,7 @@ public class ArticlesActivity extends BaseActivityWithToolbar {
             @Override
             public void onFailure(Throwable t) {
                 // TODO: manage in better way error
-                Log.e(TAG, "Error in onFailure  ", t);
+                Log.e(TAG, "Error in onFailure in getKeywords", t);
             }
         });
     }
