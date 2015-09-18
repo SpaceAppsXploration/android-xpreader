@@ -219,9 +219,9 @@ public class ArticlesActivity extends BaseActivityWithToolbar {
                 } else {
                     // TODO: manage in better way error
                     try {
-                        Log.e(TAG, response.errorBody().string());
+                        Log.e(TAG, String.format("Response not succeed in getArticles: %s", response.errorBody().string()));
                     } catch (IOException e) {
-                        Log.e(TAG, "onResponse", e);
+                        Log.e(TAG, "onResponse in getArticle", e);
                     }
                 }
             }
@@ -229,7 +229,7 @@ public class ArticlesActivity extends BaseActivityWithToolbar {
             @Override
             public void onFailure(Throwable t) {
                 // TODO: manage in better way error
-                Log.e(TAG, "Error in onFailure", t);
+                Log.e(TAG, "Error in onFailure in getArticle", t);
             }
         });
     }
@@ -250,9 +250,9 @@ public class ArticlesActivity extends BaseActivityWithToolbar {
                 } else {
                     // TODO: manage in better way error
                     try {
-                        Log.e(TAG, response.errorBody().string());
+                        Log.e(TAG, String.format("Response not succeed in getKeywords: %s", response.errorBody().string()));
                     } catch (IOException e) {
-                        Log.e(TAG, "onResponse", e);
+                        Log.e(TAG, "onResponse in getKeywords", e);
                     }
                 }
             }
@@ -260,7 +260,7 @@ public class ArticlesActivity extends BaseActivityWithToolbar {
             @Override
             public void onFailure(Throwable t) {
                 // TODO: manage in better way error
-                Log.e(TAG, "Error in onFailure", t);
+                Log.e(TAG, "Error in onFailure  ", t);
             }
         });
     }
