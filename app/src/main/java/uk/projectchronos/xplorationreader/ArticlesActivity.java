@@ -23,6 +23,7 @@ import android.os.Bundle;
 import android.support.customtabs.CustomTabsCallback;
 import android.support.customtabs.CustomTabsClient;
 import android.support.customtabs.CustomTabsIntent;
+import android.support.customtabs.CustomTabsService;
 import android.support.customtabs.CustomTabsServiceConnection;
 import android.support.customtabs.CustomTabsSession;
 import android.support.v4.content.ContextCompat;
@@ -69,7 +70,7 @@ public class ArticlesActivity extends BaseActivityWithToolbar {
     private List<Article> articleList = new ArrayList<>();
 
     /**
-     * Last next page url.
+     * Last next page URL.
      */
     private String next;
 
@@ -89,7 +90,7 @@ public class ArticlesActivity extends BaseActivityWithToolbar {
     private CustomTabsServiceConnection customTabsServiceConnection;
 
     /**
-     * ProjectChronosService that allow to access to articles and keywords API.
+     * ProjectChronosService that allows to access to articles and keywords API.
      */
     private ProjectChronosService projectChronosService;
 
@@ -151,13 +152,13 @@ public class ArticlesActivity extends BaseActivityWithToolbar {
 
     @Override
     protected void onDestroy() {
-        // Release service
+        // Releases service
         unbindCustomTabsService();
         super.onDestroy();
     }
 
     /**
-     *
+     * Creates Retrofit's ProjectChronosService with custom typeAdapter.
      */
     private void createProjectChronosService() {
         // Create new Gson throw GsonBuilder in order to extend it and parse a String[] of keywords
@@ -176,29 +177,32 @@ public class ArticlesActivity extends BaseActivityWithToolbar {
     }
 
     /**
-     * Get articles with Retrofit service from
-     * http://hypermedia.projectchronos.eu/visualize/articles/?api=true and set them and next page
-     * in class's private variables.
+     * Gets articles with Retrofit service from
+     * http://hypermedia.projectchronos.eu/visualize/articles/?api=true and sets them and next page
+     * in private variables.
      * <p/>
      * If any bookmark is passed, it opens it, otherwise opens the base page.
-     * It always returns 25 articles or less with the next page to other 25 articles.
+     * It always returns 25 articles or less with the next page to other articles.
      *
      * @param bookmark the bookmark to get. If it is null it retrieves the base page.
      */
-    private void getArticles(String bookmark) {
-        // Create asynchronous call
+    private void getArticles(final String bookmark) {
+        // Creates asynchronous call
         Call<ResponseArticlesList> articles = projectChronosService.getArticles(bookmark);
         articles.enqueue(new Callback<ResponseArticlesList>() {
             @Override
             public void onResponse(Response<ResponseArticlesList> response) {
                 if (response.isSuccess() && response.body() != null) {
-                    // Get response's body
+                    // Gets response's body
                     ResponseArticlesList responseArticlesList = response.body();
 
-                    // Add all articles retrieved
+                    // Adds all articles retrieved
                     articleList.addAll(responseArticlesList.getArticles());
 
-                    // Get next page from next url
+                    // Prefetches articles
+                    prefetchArticles();
+
+                    // Gets next page from next url
                     String nextUrl = responseArticlesList.getNext();
                     try {
                         if (BuildConfig.DEBUG)
@@ -207,7 +211,7 @@ public class ArticlesActivity extends BaseActivityWithToolbar {
 
                         next = HTTPUtil.splitQuery(new URL(nextUrl)).get("bookmark").get(0);
 
-                        // For all articles get associated keywords list
+                        // For all articles gets associated keywords list
                         for (Article article : articleList) {
                             getKeywords(article, HTTPUtil.splitQuery(new URL(article.getKeywordsUrl())).get("url").get(0));
                         }
@@ -234,15 +238,23 @@ public class ArticlesActivity extends BaseActivityWithToolbar {
         });
     }
 
+    /**
+     * Gets keywords of an article with Retrofit service from
+     * http://hypermedia.projectchronos.eu/visualize/articles/?api=true&url= and sets them into
+     * the article passed.
+     *
+     * @param article the article where sets the keywords list downloaded.
+     * @param url     the URL where gets the keywords.
+     */
     private void getKeywords(final Article article, String url) {
-        // Create asynchronous call
+        // Creates asynchronous call
         Call<List<Keyword>> keywords = projectChronosService.getKeywords(url);
         keywords.enqueue(new Callback<List<Keyword>>() {
             @Override
             public void onResponse(Response<List<Keyword>> response) {
                 if (response.isSuccess()) {
                     if (BuildConfig.DEBUG) Log.i(TAG, String.valueOf(response.body()));
-                    // Get response's body
+                    // Gets response's body
                     article.setKeywordList(response.body());
 
                     if (BuildConfig.DEBUG) Log.i(TAG, article.toString());
@@ -265,31 +277,51 @@ public class ArticlesActivity extends BaseActivityWithToolbar {
         });
     }
 
-
     /**
-     * Prepare all the stuffs in order to use an optimezed CustomTabs.
-     */
+     * Prepares all the stuffs in order to use an optimized CustomTabs.
+     * */
     private void prepareCustomTab() {
-        // Bind to the custom tab service
+        // Binds to the custom tab service
         bindCustomTabsService();
 
         // Warmup the browser process
         if (customTabsClient != null) {
             customTabsClient.warmup(0);
         }
+    }
 
-        // Get actual session and prefetch some contents
+    /**
+     * Prefetches contents of articles shown in the list.
+     */
+    private void prefetchArticles() {
+        // Gets actual session and prefetch some contents
         customTabsSession = getSession();
         if (customTabsClient != null) {
-            // TODO: pass the entire list of url fetched
-            customTabsSession.mayLaunchUrl(Uri.parse("http://www.esa.int/Our_Activities/Launchers/Launcher_Technology/Materials_structure_and_stages"), null, null);
+
+            Uri firstUri = Uri.parse("http://www.projectchronos.eu/"); // Only inizialization
+            List<Bundle> bundleList = new ArrayList<>();
+            // Gets all article url
+            for (Article article : articleList) {
+
+                String url = article.getUrl();
+                Log.i(TAG, String.format("Url to add to bundle: %s", url));
+                if (bundleList.size() == 0) {
+                    Bundle bundle = new Bundle();
+                    bundle.putParcelable(CustomTabsService.KEY_URL, Uri.parse(url));
+                    bundleList.add(bundle);
+                } else {
+                    firstUri = Uri.parse(url);
+                }
+            }
+            // Tells to the browser of a likely future navigation to a URL.
+            customTabsSession.mayLaunchUrl(firstUri, null, bundleList);
         }
     }
 
     /**
-     * This method sets all UI of our CustomTabs and after launch the page of the requested URI.
+     * Sets all UI of our CustomTabs and after it launches the page of the requested URI.
      *
-     * @param uri the URI to open into our custom CustomTabs.
+     * @param uri the URI to open into our CustomTabs.
      */
     private void launchCustomTabs(Uri uri) {
         CustomTabsIntent customTabsIntent = new CustomTabsIntent.Builder(getSession())
@@ -306,7 +338,7 @@ public class ArticlesActivity extends BaseActivityWithToolbar {
 
     /**
      * Gets the actual CustomTabsSession.
-     * If one is ready returns it, otherwise creates one with a navigation event callback.
+     * If one is ready it returns it, otherwise it creates one with a navigation event callback.
      *
      * @return null in case of there is not a CustomTabsClient, customTabsSession oterwhise.
      */
@@ -348,20 +380,20 @@ public class ArticlesActivity extends BaseActivityWithToolbar {
     }
 
     /**
-     * Allocate resources for CustomTabs.
+     * Allocates resources for CustomTabs.
      */
     private void bindCustomTabsService() {
         if (customTabsClient != null) {
             return;
         }
 
-        // Get package name to use in binding
+        // Gets package name to use in binding
         String packageNameToBind = CustomTabsHelper.getPackageNameToUse(this);
         if (packageNameToBind == null) {
             return;
         }
 
-        // Create new CustomTabsService
+        // Creates new CustomTabsService
         customTabsServiceConnection = new CustomTabsServiceConnection() {
             @Override
             public void onCustomTabsServiceConnected(ComponentName name, CustomTabsClient client) {
@@ -376,14 +408,14 @@ public class ArticlesActivity extends BaseActivityWithToolbar {
             }
         };
 
-        // Bind it!
+        // Binds it!
         if (!CustomTabsClient.bindCustomTabsService(this, packageNameToBind, customTabsServiceConnection)) {
             customTabsServiceConnection = null;
         }
     }
 
     /**
-     * Release all resources used for CustomTabs.
+     * Releases all resources used for CustomTabs.
      */
     private void unbindCustomTabsService() {
         if (customTabsServiceConnection == null) {
