@@ -30,9 +30,9 @@ import uk.projectchronos.xplorationreader.model.ResponseArticlesList;
  */
 public interface ProjectChronosService {
 
-    @GET("visualize/articles/?api=true")
+    @GET("articles/?api=true")
     Call<ResponseArticlesList> getArticles(@Query("bookmark") String bookmark);
 
-    @GET("visualize/articles/?api=true")
+    @GET("articles/?api=true")
     Call<List<Keyword>> getKeywords(@Query("url") String url);
 }
