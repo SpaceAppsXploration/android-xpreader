@@ -1,21 +1,28 @@
 /*
- * Copyright 2014-2015 Project Chronos and Pramantha Ltd
+ * The MIT License (MIT)
  *
- *    Licensed under the Apache License, Version 2.0 (the "License");
- *    you may not use this file except in compliance with the License.
- *    You may obtain a copy of the License at
+ * Copyright (c) 2015 Claudio Pastorini
  *
- *        http://www.apache.org/licenses/LICENSE-2.0
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- *    Unless required by applicable law or agreed to in writing, software
- *    distributed under the License is distributed on an "AS IS" BASIS,
- *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *    See the License for the specific language governing permissions and
- *    limitations under the License.
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
  */
 
 package uk.projectchronos.xplorationreader.api;
-
 
 import com.google.gson.Gson;
 import com.google.gson.TypeAdapter;
@@ -49,7 +56,7 @@ public class KeywordAdapterFactory implements TypeAdapterFactory {
                 Type[] instantiated = ((ParameterizedType) type).getActualTypeArguments();
                 if (Keyword.class.isAssignableFrom(TypeToken.get(instantiated[0]).getRawType())) {
 
-                    // Parse String[] into List<Keywords>
+                    // Parses String[] into List<Keywords>
                     return (TypeAdapter<T>) new TypeAdapter<List<Keyword>>() {
                         @Override
                         public void write(JsonWriter out, List<Keyword> value) throws IOException {
@@ -58,21 +65,51 @@ public class KeywordAdapterFactory implements TypeAdapterFactory {
 
                         @Override
                         public List<Keyword> read(JsonReader jsonReader) throws IOException {
-                            // Create Keyword list
+
+                            // Creates Keyword list
                             List<Keyword> keywordList = new ArrayList<>();
 
-                            // Read array until there is a string
+                            // Reads array until there is a string
                             jsonReader.beginArray();
+
                             while (jsonReader.hasNext()) {
-                                // Get the string
-                                String keywordString = jsonReader.nextString();
-                                // Create and set keyword to the new Keyword Object
+                                // Reads object
+                                jsonReader.beginObject();
+
+                                String relatedUrls = null;
+                                String slug = null;
+                                String value = null;
+
+                                // While has something to parse..
+                                while (jsonReader.hasNext()) {
+                                    switch (jsonReader.nextName()) {
+                                        case "related_urls":
+                                            relatedUrls = jsonReader.nextString();
+                                            break;
+                                        case "slug":
+                                            slug = jsonReader.nextString();
+                                            break;
+                                        case "value":
+                                            value = jsonReader.nextString();
+                                            break;
+                                        default:
+                                            jsonReader.skipValue();
+                                            break;
+                                    }
+                                }
+
+                                // Create keyword and set all data parsed
                                 Keyword keyword = new Keyword();
-                                keyword.setKeyword(keywordString);
+                                keyword.setRelatedUrls(relatedUrls);
+                                keyword.setSlug(slug);
+                                keyword.setValue(value);
                                 // Add the newly created object into list
                                 keywordList.add(keyword);
+
+                                // Closes object
+                                jsonReader.endObject();
                             }
-                            // Close the closure of array and return the list
+                            // Closes the array
                             jsonReader.endArray();
 
                             return keywordList;
@@ -86,5 +123,3 @@ public class KeywordAdapterFactory implements TypeAdapterFactory {
         return null;
     }
 }
-
-

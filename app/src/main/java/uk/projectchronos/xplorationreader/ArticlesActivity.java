@@ -1,22 +1,31 @@
 /*
- * Copyright 2014-2015 Project Chronos and Pramantha Ltd
+ * The MIT License (MIT)
  *
- *    Licensed under the Apache License, Version 2.0 (the "License");
- *    you may not use this file except in compliance with the License.
- *    You may obtain a copy of the License at
+ * Copyright (c) 2015 Claudio Pastorini
  *
- *        http://www.apache.org/licenses/LICENSE-2.0
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- *    Unless required by applicable law or agreed to in writing, software
- *    distributed under the License is distributed on an "AS IS" BASIS,
- *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *    See the License for the specific language governing permissions and
- *    limitations under the License.
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
  */
 
 package uk.projectchronos.xplorationreader;
 
 import android.content.ComponentName;
+import android.database.sqlite.SQLiteConstraintException;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
@@ -49,7 +58,9 @@ import uk.projectchronos.xplorationreader.api.KeywordAdapterFactory;
 import uk.projectchronos.xplorationreader.api.ProjectChronosService;
 import uk.projectchronos.xplorationreader.model.Article;
 import uk.projectchronos.xplorationreader.model.Keyword;
+import uk.projectchronos.xplorationreader.model.KeywordToArticles;
 import uk.projectchronos.xplorationreader.model.ResponseArticlesList;
+import uk.projectchronos.xplorationreader.model.ResponseKeywordsList;
 import uk.projectchronos.xplorationreader.utils.BaseActivityWithToolbar;
 import uk.projectchronos.xplorationreader.utils.CustomTabsHelper;
 import uk.projectchronos.xplorationreader.utils.HTTPUtil;
@@ -94,6 +105,11 @@ public class ArticlesActivity extends BaseActivityWithToolbar {
      */
     private ProjectChronosService projectChronosService;
 
+    /**
+     * Application useful in order to call singletons.
+     */
+    private App application;
+
     @Override
     protected int getLayoutResourceId() {
         return R.layout.activity_articles;
@@ -111,6 +127,9 @@ public class ArticlesActivity extends BaseActivityWithToolbar {
         getSupportActionBar().setDisplayHomeAsUpEnabled(false);
         getSupportActionBar().setTitle(R.string.title_activity_articles);
 
+        // Get application
+        application = ((App) getApplication());
+
         // Create service
         createProjectChronosService();
 
@@ -119,6 +138,11 @@ public class ArticlesActivity extends BaseActivityWithToolbar {
 
         // Prepare custom tab
         prepareCustomTab();
+
+        Log.v(TAG, String.format("Articles from db: %s", String.valueOf(application.getArticleDao().loadAll())));
+        Log.v(TAG, String.format("Keywords from db: %s", String.valueOf(application.getKeywordDao().loadAll())));
+        Log.v(TAG, String.format("KeywordToArticles from db: %s", String.valueOf(application.getKeywordToArticlesDao().loadAll())));
+
     }
 
     @Override
@@ -164,6 +188,7 @@ public class ArticlesActivity extends BaseActivityWithToolbar {
         // Create new Gson throw GsonBuilder in order to extend it and parse a String[] of keywords
         // into a List<Keyword> thanks to KeywordAdapter
         Gson gson = new GsonBuilder()
+                .setDateFormat("yyyy-MM-dd'T'HH:mm:ss")
                 .registerTypeAdapterFactory(new KeywordAdapterFactory())
                 .create();
 
@@ -178,7 +203,7 @@ public class ArticlesActivity extends BaseActivityWithToolbar {
 
     /**
      * Gets articles with Retrofit service from
-     * http://hypermedia.projectchronos.eu/visualize/articles/?api=true and sets them and next page
+     * http://hypermedia.projectchronos.eu/articles/?api=true and sets them and next page
      * in private variables.
      * <p/>
      * If any bookmark is passed, it opens it, otherwise opens the base page.
@@ -206,14 +231,19 @@ public class ArticlesActivity extends BaseActivityWithToolbar {
                     String nextUrl = responseArticlesList.getNext();
                     try {
                         if (BuildConfig.DEBUG)
-                            Log.i(TAG, String.format("Total articles downloaded: %d\nArticles: %s", articleList.size(), articleList.toString()));
-                        if (BuildConfig.DEBUG) Log.i(TAG, String.format("NextUrl: %s", nextUrl));
+                            Log.v(TAG, String.format("Total articles downloaded: %d\nArticles: %s", articleList.size(), articleList.toString()));
+                        if (BuildConfig.DEBUG) Log.v(TAG, String.format("NextUrl: %s", nextUrl));
 
                         next = HTTPUtil.splitQuery(new URL(nextUrl)).get("bookmark").get(0);
 
-                        // For all articles gets associated keywords list
+                        // For all articles
                         for (Article article : articleList) {
-                            getKeywords(article, HTTPUtil.splitQuery(new URL(article.getKeywordsUrl())).get("url").get(0));
+                            // Saves it into databases (or get it)
+                            long articleId = application.getArticleDao().getOrInsert(article);
+
+                            // Gets all keywords associated
+                            String url = HTTPUtil.splitQuery(new URL(article.getKeywordsUrl())).get("url").get(0);
+                            getKeywords(articleId, url);
                         }
 
                     } catch (MalformedURLException e) {
@@ -240,24 +270,47 @@ public class ArticlesActivity extends BaseActivityWithToolbar {
 
     /**
      * Gets keywords of an article with Retrofit service from
-     * http://hypermedia.projectchronos.eu/visualize/articles/?api=true&url= and sets them into
+     * http://hypermedia.projectchronos.eu/articles/?api=true&url= and sets them into
      * the article passed.
      *
-     * @param article the article where sets the keywords list downloaded.
-     * @param url     the URL where gets the keywords.
+     * @param articleId the article id where sets the keywords list downloaded.
+     * @param url       the URL where gets the keywords.
      */
-    private void getKeywords(final Article article, String url) {
+    private void getKeywords(final long articleId, String url) {
         // Creates asynchronous call
-        Call<List<Keyword>> keywords = projectChronosService.getKeywords(url);
-        keywords.enqueue(new Callback<List<Keyword>>() {
+        Call<ResponseKeywordsList> keywords = projectChronosService.getKeywords(url);
+        keywords.enqueue(new Callback<ResponseKeywordsList>() {
             @Override
-            public void onResponse(Response<List<Keyword>> response) {
+            public void onResponse(Response<ResponseKeywordsList> response) {
                 if (response.isSuccess()) {
-                    if (BuildConfig.DEBUG) Log.i(TAG, String.valueOf(response.body()));
                     // Gets response's body
-                    article.setKeywordList(response.body());
+                    ResponseKeywordsList responseKeywordsList = response.body();
 
-                    if (BuildConfig.DEBUG) Log.i(TAG, article.toString());
+                    // Gets keywords list
+                    List<Keyword> keywordList = responseKeywordsList.getKeywords();
+
+                    Log.i(TAG, keywordList.toString());
+
+                    // For all keywords
+                    for (Keyword keyword : keywordList) {
+                        try {
+                            // Saves it into database
+                            long keywordId = application.getKeywordDao().getOrInsert(keyword);
+                            Log.v(TAG, String.format("keyword has id: %d", keywordId));
+
+                            // Associates it with article
+                            KeywordToArticles keywordToArticles = new KeywordToArticles();
+                            keywordToArticles.setKeywordId(keywordId);
+                            keywordToArticles.setArticleId(articleId);
+
+                            // Saves it into databases
+                            long keywordToArticlesId = application.getKeywordToArticlesDao().getOrInsert(keywordToArticles);
+
+                            Log.v(TAG, String.format("keywordToArticles has id: %d", keywordToArticlesId));
+                        } catch (SQLiteConstraintException exception) {
+                            Log.e(TAG, "Error in onFailure in getKeywords", exception);
+                        }
+                    }
 
                 } else {
                     // TODO: manage in better way error
@@ -304,7 +357,7 @@ public class ArticlesActivity extends BaseActivityWithToolbar {
             for (Article article : articleList) {
 
                 String url = article.getUrl();
-                Log.i(TAG, String.format("Url to add to bundle: %s", url));
+                Log.v(TAG, String.format("Url to add to bundle: %s", url));
                 if (bundleList.size() == 0) {
                     Bundle bundle = new Bundle();
                     bundle.putParcelable(CustomTabsService.KEY_URL, Uri.parse(url));
