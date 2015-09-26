@@ -1,7 +1,7 @@
 <component name="CopyrightManager">
   <settings default="PramanthaCopyright">
     <module2copyright>
-      <element module="All" copyright="ClaudioCopyright" />
+      <element module="All" copyright="PramanthaCopyright" />
     </module2copyright>
   </settings>
 </component>
