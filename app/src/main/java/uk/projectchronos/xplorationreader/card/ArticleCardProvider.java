@@ -22,6 +22,7 @@ import android.widget.TextView;
 
 import com.dexafree.materialList.card.Card;
 import com.dexafree.materialList.card.provider.CardProvider;
+import com.greenfrvr.hashtagview.HashtagView;
 
 import java.text.DateFormat;
 import java.util.Date;
@@ -31,6 +32,7 @@ import butterknife.Bind;
 import butterknife.ButterKnife;
 import uk.projectchronos.xplorationreader.R;
 import uk.projectchronos.xplorationreader.model.Article;
+import uk.projectchronos.xplorationreader.model.Keyword;
 
 /**
  *
@@ -56,6 +58,12 @@ public class ArticleCardProvider extends CardProvider {
      */
     @Bind(R.id.abstract_text_view)
     TextView abstractTextView;
+
+    /**
+     *
+     */
+    @Bind(R.id.keywords_hashtag)
+    HashtagView keywordHashtagView;
 
     @Override
     public int getLayout() {
@@ -86,6 +94,13 @@ public class ArticleCardProvider extends CardProvider {
             }
 
             abstractTextView.setText(article.get_abstract());
+
+            keywordHashtagView.setData(article.getKeywordsList(), new HashtagView.DataTransform<Keyword>() {
+                @Override
+                public CharSequence prepare(Keyword keyword) {
+                    return keyword.getValue();
+                }
+            });
         }
     }
 }

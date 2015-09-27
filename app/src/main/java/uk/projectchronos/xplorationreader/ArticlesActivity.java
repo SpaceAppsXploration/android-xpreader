@@ -268,7 +268,7 @@ public class ArticlesActivity extends BaseActivityWithToolbar {
                             getKeywords(articleId, url);
 
                             Card card = new Card.Builder(getBaseContext())
-                                    .setTag(article)
+                                    .setTag(application.getArticleDao().load(articleId))  // Gets the article from db
                                     .withProvider(ArticleCardProvider.class)
                                     .endConfig()
                                     .build();

@@ -29,6 +29,8 @@
         android:layout_marginLeft="@dimen/small_padding"
         android:layout_marginRight="@dimen/small_padding"
         android:layout_marginTop="@dimen/card_vertical_margin"
+        android:clickable="true"
+        android:foreground="?android:attr/selectableItemBackground"
         card_view:cardCornerRadius="@dimen/card_corner_radius">
 
         <LinearLayout
@@ -82,6 +84,11 @@
                 </LinearLayout>
 
             </LinearLayout>
+
+            <com.greenfrvr.hashtagview.HashtagView
+                android:id="@+id/keywords_hashtag"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
 
             <TextView
                 android:id="@+id/abstract_text_view"
