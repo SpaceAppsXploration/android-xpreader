@@ -21,6 +21,7 @@ import android.database.sqlite.SQLiteConstraintException;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.customtabs.CustomTabsCallback;
 import android.support.customtabs.CustomTabsClient;
 import android.support.customtabs.CustomTabsIntent;
@@ -28,10 +29,15 @@ import android.support.customtabs.CustomTabsService;
 import android.support.customtabs.CustomTabsServiceConnection;
 import android.support.customtabs.CustomTabsSession;
 import android.support.v4.content.ContextCompat;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.LinearLayout;
 
+import com.dexafree.materialList.card.Card;
+import com.dexafree.materialList.listeners.RecyclerItemClickListener;
+import com.dexafree.materialList.view.MaterialListView;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
@@ -41,6 +47,8 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
+import butterknife.Bind;
+import butterknife.ButterKnife;
 import retrofit.Call;
 import retrofit.Callback;
 import retrofit.GsonConverterFactory;
@@ -48,6 +56,7 @@ import retrofit.Response;
 import retrofit.Retrofit;
 import uk.projectchronos.xplorationreader.api.KeywordAdapterFactory;
 import uk.projectchronos.xplorationreader.api.ProjectChronosService;
+import uk.projectchronos.xplorationreader.card.ArticleCardProvider;
 import uk.projectchronos.xplorationreader.model.Article;
 import uk.projectchronos.xplorationreader.model.Keyword;
 import uk.projectchronos.xplorationreader.model.KeywordToArticles;
@@ -66,37 +75,40 @@ public class ArticlesActivity extends BaseActivityWithToolbar {
      * Base url for API service.
      */
     private static final String BASE_URL = "http://hypermedia.projectchronos.eu/";
-
+    /**
+     *
+     */
+    @Bind(R.id.material_article_list)
+    MaterialListView materialListView;
+    /**
+     *
+     */
+    @Bind(R.id.empty_article_view)
+    LinearLayout emptyArticleTextView;
     /**
      * List of articles.
      */
     private List<Article> articleList = new ArrayList<>();
-
     /**
      * Last next page URL.
      */
     private String next;
-
     /**
      * Custom Tabs Session.
      */
     private CustomTabsSession customTabsSession;
-
     /**
      * Custom Tabs Client.
      */
     private CustomTabsClient customTabsClient;
-
     /**
      * Custom Tabs Service Connection.
      */
     private CustomTabsServiceConnection customTabsServiceConnection;
-
     /**
      * ProjectChronosService that allows to access to articles and keywords API.
      */
     private ProjectChronosService projectChronosService;
-
     /**
      * Application useful in order to call singletons.
      */
@@ -122,13 +134,42 @@ public class ArticlesActivity extends BaseActivityWithToolbar {
         // Get application
         application = ((App) getApplication());
 
-        // Create service
+        // Binds views
+        ButterKnife.bind(this);
+
+        // Sets empty view
+        materialListView.setEmptyView(emptyArticleTextView);
+
+        // Adds onScrollListener in order to download other artiles when user arrives to the bottom
+        materialListView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+                super.onScrolled(recyclerView, dx, dy);
+                //TODO: Issue #13
+            }
+        });
+
+        // Adds onItemTouchListener in order to open the Chrome Custom Tabs when card clicked
+        materialListView.addOnItemTouchListener(new RecyclerItemClickListener.OnItemClickListener() {
+            @Override
+            public void onItemClick(@NonNull Card card, int i) {
+                Uri uri = Uri.parse(((Article) card.getTag()).getUrl());
+                launchCustomTabs(uri);
+            }
+
+            @Override
+            public void onItemLongClick(@NonNull Card card, int i) {
+                // Nothing to do here
+            }
+        });
+
+        // Creates service
         createProjectChronosService();
 
-        // Get articles
+        // Gets articles
         getArticles(null);
 
-        // Prepare custom tab
+        // Prepares custom tab
         prepareCustomTab();
 
         Log.v(TAG, String.format("Articles from db: %s", String.valueOf(application.getArticleDao().loadAll())));
@@ -149,18 +190,7 @@ public class ArticlesActivity extends BaseActivityWithToolbar {
         // Handle action bar item clicks here. The action bar will
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-        // TODO: remove after
-        switch (id) {
-
-            case R.id.action_settings:
-                return true;
-
-            case R.id.action_try_tab:
-                Uri uri = Uri.parse("http://www.esa.int/Our_Activities/Launchers/Launcher_Technology/Materials_structure_and_stages");
-                launchCustomTabs(uri);
-                return true;
-
+        switch (item.getItemId()) {
             default:
                 return super.onOptionsItemSelected(item);
         }
@@ -236,11 +266,19 @@ public class ArticlesActivity extends BaseActivityWithToolbar {
                             // Gets all keywords associated
                             String url = HTTPUtil.splitQuery(new URL(article.getKeywordsUrl())).get("url").get(0);
                             getKeywords(articleId, url);
+
+                            Card card = new Card.Builder(getBaseContext())
+                                    .setTag(article)
+                                    .withProvider(ArticleCardProvider.class)
+                                    .endConfig()
+                                    .build();
+
+                            materialListView.add(card);
                         }
 
                     } catch (MalformedURLException e) {
                         Log.e(TAG, String.format("%s could not be parsed as a URL", nextUrl), e);
-                        //TODO: last call return a null next parameter, manage in order to avoid silly connections
+                        //TODO: Issue #11
                     }
                 } else {
                     // TODO: manage in better way error

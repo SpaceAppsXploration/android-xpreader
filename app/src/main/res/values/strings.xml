@@ -16,10 +16,15 @@
 
 <resources>
     <string name="app_name">Xploration Reader</string>
+
+    <!-- Activities titles -->
     <string name="title_activity_articles">Articles</string>
 
-    <string name="hello_world">Hello world!</string>
-    <string name="action_settings">Settings</string>
-    <!-- TODO: remove after -->
-    <string name="action_try_tab">Try Tab</string>
+    <!-- Activity Articles -->
+    <string name="empty_article_list">There are no articles yet for you</string>
+
+    <!-- Article card -->
+    <string name="stored">stored</string>
+    <string name="agency_icon_description">Agency icon</string>
+
 </resources>
