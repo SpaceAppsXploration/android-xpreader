@@ -21,7 +21,7 @@ We want to create something that works well in a well-written way, so we use som
 
 and also:
 
-* [AndroidTagGroup](https://github.com/2dxgujun/AndroidTagGroup)
+* [HashtagView](https://github.com/greenfrvr/hashtag-view)
 * [MaterialList](https://github.com/dexafree/MaterialList)
 * [AboutLibraries](https://github.com/mikepenz/AboutLibraries)
 
