@@ -79,7 +79,7 @@ public class ArticlesActivity extends BaseActivityWithToolbar {
      *
      */
     @Bind(R.id.material_article_list)
-    MaterialListView materialListView;
+    MaterialListView articlesMaterialListView;
     /**
      *
      */
@@ -138,10 +138,10 @@ public class ArticlesActivity extends BaseActivityWithToolbar {
         ButterKnife.bind(this);
 
         // Sets empty view
-        materialListView.setEmptyView(emptyArticleTextView);
+        articlesMaterialListView.setEmptyView(emptyArticleTextView);
 
         // Adds onScrollListener in order to download other artiles when user arrives to the bottom
-        materialListView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+        articlesMaterialListView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
             public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
                 super.onScrolled(recyclerView, dx, dy);
@@ -150,7 +150,7 @@ public class ArticlesActivity extends BaseActivityWithToolbar {
         });
 
         // Adds onItemTouchListener in order to open the Chrome Custom Tabs when card clicked
-        materialListView.addOnItemTouchListener(new RecyclerItemClickListener.OnItemClickListener() {
+        articlesMaterialListView.addOnItemTouchListener(new RecyclerItemClickListener.OnItemClickListener() {
             @Override
             public void onItemClick(@NonNull Card card, int i) {
                 Uri uri = Uri.parse(((Article) card.getTag()).getUrl());
@@ -273,7 +273,7 @@ public class ArticlesActivity extends BaseActivityWithToolbar {
                                     .endConfig()
                                     .build();
 
-                            materialListView.add(card);
+                            articlesMaterialListView.add(card);
                         }
 
                     } catch (MalformedURLException e) {
@@ -281,6 +281,19 @@ public class ArticlesActivity extends BaseActivityWithToolbar {
                         //TODO: Issue #11
                     }
                 } else {
+
+                    articleList = application.getArticleDao().loadAll();
+
+                    for (Article article : articleList) {
+                        Card card = new Card.Builder(getBaseContext())
+                                .setTag(article)
+                                .withProvider(ArticleCardProvider.class)
+                                .endConfig()
+                                .build();
+
+                        articlesMaterialListView.add(card);
+                    }
+
                     // TODO: manage in better way error
                     try {
                         Log.e(TAG, String.format("Response not succeed in getArticles: %s", response.errorBody().string()));

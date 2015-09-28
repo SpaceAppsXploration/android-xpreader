@@ -26,6 +26,7 @@ import com.greenfrvr.hashtagview.HashtagView;
 
 import java.text.DateFormat;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 
 import butterknife.Bind;
@@ -95,7 +96,9 @@ public class ArticleCardProvider extends CardProvider {
 
             abstractTextView.setText(article.get_abstract());
 
-            keywordHashtagView.setData(article.getKeywordsList(), new HashtagView.DataTransform<Keyword>() {
+            List<Keyword> keywords = article.getKeywordsList();
+
+            keywordHashtagView.setData(keywords, new HashtagView.DataTransform<Keyword>() {
                 @Override
                 public CharSequence prepare(Keyword keyword) {
                     return keyword.getValue();
