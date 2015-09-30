@@ -21,65 +21,71 @@ import com.google.gson.annotations.Expose;
 import java.util.List;
 
 /**
- *
+ * Response object to getKeywords().
  */
 public class ResponseKeywordsList {
 
     /**
-     *
+     * The list of keywords.
      */
     @Expose
     private List<Keyword> keywords;
 
     /**
-     *
+     * Te URL of the the indexed resource.
      */
     @Expose
     private String url;
 
     /**
-     *
+     * The id of the indexed resource.
      */
     @Expose
     private long uuid;
 
     /**
-     * @return
+     * Gets the keywords.
+     *
+     * @return the keywords.
      */
     public List<Keyword> getKeywords() {
         return keywords;
     }
 
     /**
-     * @return
+     * Sets the keywords.
      */
     public void setKeywords(List<Keyword> keywords) {
         this.keywords = keywords;
     }
 
     /**
-     * @return
+     * Gets URL of the indexed resource.
+     *
+     * @return the URL of the indexed resource.
      */
     public String getUrl() {
         return url;
     }
 
     /**
-     * @return
+     * Sets the URL of the indexed resource.
      */
     public void setUrl(String url) {
         this.url = url;
     }
 
     /**
-     * @return
+     * Gets the UUID of the resource.
+     *
+     * @return the UUID of the resource.
      */
     public long getUuid() {
         return uuid;
     }
 
     /**
-     * @return
+     * Sets the UUID of the resoruce.
      */
     public void setUuid(long uuid) {
         this.uuid = uuid;

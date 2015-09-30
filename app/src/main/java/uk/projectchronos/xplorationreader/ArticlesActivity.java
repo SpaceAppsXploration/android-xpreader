@@ -75,40 +75,49 @@ public class ArticlesActivity extends BaseActivityWithToolbar {
      * Base url for API service.
      */
     private static final String BASE_URL = "http://hypermedia.projectchronos.eu/";
+
     /**
-     *
+     * Articles MaterialListView.
      */
     @Bind(R.id.material_article_list)
     MaterialListView articlesMaterialListView;
+
     /**
-     *
+     * Empty LinearLayout.
      */
     @Bind(R.id.empty_article_view)
     LinearLayout emptyArticleTextView;
+
     /**
      * List of articles.
      */
     private List<Article> articleList = new ArrayList<>();
+
     /**
      * Last next page URL.
      */
     private String next;
+
     /**
      * Custom Tabs Session.
      */
     private CustomTabsSession customTabsSession;
+
     /**
      * Custom Tabs Client.
      */
     private CustomTabsClient customTabsClient;
+
     /**
      * Custom Tabs Service Connection.
      */
     private CustomTabsServiceConnection customTabsServiceConnection;
+
     /**
      * ProjectChronosService that allows to access to articles and keywords API.
      */
     private ProjectChronosService projectChronosService;
+
     /**
      * Application useful in order to call singletons.
      */

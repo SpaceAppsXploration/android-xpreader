@@ -21,12 +21,19 @@ import com.google.gson.annotations.Expose;
 import java.util.List;
 
 /**
- *
+ * Response object to getArticles().
  */
 public class ResponseArticlesList {
 
+    /**
+     * List of <= 25 articles.
+     */
     @Expose
     private List<Article> articles;
+
+    /**
+     * The URL to next articles list.
+     */
     @Expose
     private String next;
 

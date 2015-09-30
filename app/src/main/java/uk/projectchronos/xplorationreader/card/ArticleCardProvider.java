@@ -26,7 +26,6 @@ import com.greenfrvr.hashtagview.HashtagView;
 
 import java.text.DateFormat;
 import java.util.Date;
-import java.util.List;
 import java.util.Locale;
 
 import butterknife.Bind;
@@ -36,32 +35,32 @@ import uk.projectchronos.xplorationreader.model.Article;
 import uk.projectchronos.xplorationreader.model.Keyword;
 
 /**
- *
+ * Custom CardProvider that allows us to create own Article Card.
  */
 public class ArticleCardProvider extends CardProvider {
 
     private static final String TAG = "ArticleCardProvider";
 
     /**
-     *
+     * Title TextView.
      */
     @Bind(R.id.title_text_view)
     TextView titleTextView;
 
     /**
-     *
+     * Date TextView.
      */
     @Bind(R.id.date_text_view)
     TextView dateTextView;
 
     /**
-     *
+     * Abstract TextView.
      */
     @Bind(R.id.abstract_text_view)
     TextView abstractTextView;
 
     /**
-     *
+     * Keywords HashtagView.
      */
     @Bind(R.id.keywords_hashtag)
     HashtagView keywordHashtagView;
@@ -78,13 +77,16 @@ public class ArticleCardProvider extends CardProvider {
         // Binds views
         ButterKnife.bind(this, view);
 
-        // Get article
+        // Gets article
         Article article = (Article) card.getTag();
         if (article != null) {
+            // Sets title
             titleTextView.setText(article.getTitle());
 
+            // Gets default date format using locale
             DateFormat simpleDateFormat = DateFormat.getDateInstance(DateFormat.DEFAULT, Locale.getDefault());
 
+            // Gets stored and published date and then sets them
             Date storedDate = article.getStored();
             Date publishedDate = article.getPublished();
 
@@ -94,14 +96,14 @@ public class ArticleCardProvider extends CardProvider {
                 dateTextView.setText(String.format("%s %s", getContext().getResources().getString(R.string.stored), simpleDateFormat.format(storedDate)));
             }
 
+            // Sets abstract
             abstractTextView.setText(article.get_abstract());
 
-            List<Keyword> keywords = article.getKeywordsList();
-
-            keywordHashtagView.setData(keywords, new HashtagView.DataTransform<Keyword>() {
+            // Sets keywords
+            keywordHashtagView.setData(article.getKeywordsList(), new HashtagView.DataTransform<Keyword>() {
                 @Override
                 public CharSequence prepare(Keyword keyword) {
-                    return keyword.getValue();
+                    return keyword.getValue();  // In this way the tag shows the keywords' value
                 }
             });
         }
