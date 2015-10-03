@@ -63,13 +63,15 @@ import uk.projectchronos.xplorationreader.model.KeywordToArticles;
 import uk.projectchronos.xplorationreader.model.ResponseArticlesList;
 import uk.projectchronos.xplorationreader.model.ResponseKeywordsList;
 import uk.projectchronos.xplorationreader.utils.BaseActivityWithToolbar;
+import uk.projectchronos.xplorationreader.utils.ConnectionHelper;
+import uk.projectchronos.xplorationreader.utils.ConnectionReceiver;
 import uk.projectchronos.xplorationreader.utils.CustomTabsHelper;
 import uk.projectchronos.xplorationreader.utils.HTTPUtil;
 
 /**
  * Main Activty with articles list.
  */
-public class ArticlesActivity extends BaseActivityWithToolbar {
+public class ArticlesActivity extends BaseActivityWithToolbar implements ConnectionHelper.Callbacks {
 
     /**
      * Base url for API service.
@@ -123,6 +125,11 @@ public class ArticlesActivity extends BaseActivityWithToolbar {
      */
     private App application;
 
+    /**
+     *
+     */
+    private ConnectionReceiver connectionHelper;
+
     @Override
     protected int getLayoutResourceId() {
         return R.layout.activity_articles;
@@ -146,34 +153,14 @@ public class ArticlesActivity extends BaseActivityWithToolbar {
         // Binds views
         ButterKnife.bind(this);
 
-        // Sets empty view
-        articlesMaterialListView.setEmptyView(emptyArticleTextView);
-
-        // Adds onScrollListener in order to download other artiles when user arrives to the bottom
-        articlesMaterialListView.addOnScrollListener(new RecyclerView.OnScrollListener() {
-            @Override
-            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
-                super.onScrolled(recyclerView, dx, dy);
-                //TODO: Issue #13
-            }
-        });
-
-        // Adds onItemTouchListener in order to open the Chrome Custom Tabs when card clicked
-        articlesMaterialListView.addOnItemTouchListener(new RecyclerItemClickListener.OnItemClickListener() {
-            @Override
-            public void onItemClick(@NonNull Card card, int i) {
-                Uri uri = Uri.parse(((Article) card.getTag()).getUrl());
-                launchCustomTabs(uri);
-            }
-
-            @Override
-            public void onItemLongClick(@NonNull Card card, int i) {
-                // Nothing to do here
-            }
-        });
+        // Prepare list view
+        prepareMaterialListView();
 
         // Creates service
         createProjectChronosService();
+
+        // Create BroadcastReceiver for connectivity checking
+        connectionHelper = new ConnectionReceiver();
 
         // Gets articles
         getArticles(null);
@@ -206,10 +193,59 @@ public class ArticlesActivity extends BaseActivityWithToolbar {
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+        // Start connectivity checker
+        connectionHelper.register(this);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        // Stop connectivity checker
+        connectionHelper.unRegister(this);
+    }
+
+    @Override
     protected void onDestroy() {
         // Releases service
         unbindCustomTabsService();
         super.onDestroy();
+    }
+
+    /**
+     *
+     */
+    private void prepareMaterialListView() {
+        // Sets empty view
+        articlesMaterialListView.setEmptyView(emptyArticleTextView);
+
+        // Adds onScrollListener in order to download other artiles when user arrives to the bottom
+        articlesMaterialListView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+                super.onScrolled(recyclerView, dx, dy);
+                //TODO: Issue #13
+            }
+        });
+
+        // Adds onItemTouchListener in order to open the Chrome Custom Tabs when card clicked
+        articlesMaterialListView.addOnItemTouchListener(new RecyclerItemClickListener.OnItemClickListener() {
+            @Override
+            public void onItemClick(@NonNull Card card, int i) {
+                Article article = (Article) card.getTag();
+                //TODO: manage in some way if article's url is null
+                String url = article.getUrl();
+                Uri uri = Uri.parse(url);
+
+                launchCustomTabs(uri);
+            }
+
+            @Override
+            public void onItemLongClick(@NonNull Card card, int i) {
+                // Nothing to do here
+            }
+        });
     }
 
     /**
@@ -530,5 +566,10 @@ public class ArticlesActivity extends BaseActivityWithToolbar {
         unbindService(customTabsServiceConnection);
         customTabsClient = null;
         customTabsSession = null;
+    }
+
+    @Override
+    public void onConnectionChanged(boolean isConnected, boolean isOnline) {
+        Log.i(TAG, String.format("Connection changed, now is connected %s and is online %s", isConnected, isOnline));
     }
 }
