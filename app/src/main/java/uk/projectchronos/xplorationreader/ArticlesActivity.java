@@ -31,7 +31,7 @@ import android.support.customtabs.CustomTabsServiceConnection;
 import android.support.customtabs.CustomTabsSession;
 import android.support.design.widget.Snackbar;
 import android.support.v4.content.ContextCompat;
-import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.LinearLayoutManager;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -69,6 +69,7 @@ import uk.projectchronos.xplorationreader.utils.BaseActivityWithToolbar;
 import uk.projectchronos.xplorationreader.utils.ConnectionHelper;
 import uk.projectchronos.xplorationreader.utils.ConnectionReceiver;
 import uk.projectchronos.xplorationreader.utils.CustomTabsHelper;
+import uk.projectchronos.xplorationreader.utils.EndlessRecyclerOnScrollListener;
 import uk.projectchronos.xplorationreader.utils.HTTPUtil;
 
 /**
@@ -183,7 +184,7 @@ public class ArticlesActivity extends BaseActivityWithToolbar implements Connect
         connectionReceiver = new ConnectionReceiver();
 
         // Gets articles
-        getArticles(next);
+        getArticlesFromService(next);
 
         // Prepares custom tab
         prepareCustomTab();
@@ -244,7 +245,7 @@ public class ArticlesActivity extends BaseActivityWithToolbar implements Connect
             public void onDismissed(Snackbar snackbar, int event) {
                 super.onDismissed(snackbar, event);
 
-                getArticles(next);  //TODO manage in better way otherwise it will get articles that are not requested yet
+                getArticlesFromService(next);  //TODO manage in better way otherwise it will get articles that are not requested yet
             }
         });
 
@@ -265,12 +266,14 @@ public class ArticlesActivity extends BaseActivityWithToolbar implements Connect
         // Sets empty view
         articlesMaterialListView.setEmptyView(emptyArticleTextView);
 
+        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
+        articlesMaterialListView.setLayoutManager(linearLayoutManager);
+
         // Adds onScrollListener in order to download other artiles when user arrives to the bottom
-        articlesMaterialListView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+        articlesMaterialListView.addOnScrollListener(new EndlessRecyclerOnScrollListener(linearLayoutManager) {
             @Override
-            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
-                super.onScrolled(recyclerView, dx, dy);
-                //TODO: Issue #13
+            public void onLoadMore() {
+                getArticlesFromService(next);
             }
         });
 
@@ -291,6 +294,19 @@ public class ArticlesActivity extends BaseActivityWithToolbar implements Connect
                 // Nothing to do here
             }
         });
+    }
+
+    /**
+     * Prepares all the stuffs in order to use an optimized CustomTabs.
+     */
+    private void prepareCustomTab() {
+        // Binds to the custom tab service
+        bindCustomTabsService();
+
+        // Warmup the browser process
+        if (customTabsClient != null) {
+            customTabsClient.warmup(0);
+        }
     }
 
     /**
@@ -315,7 +331,7 @@ public class ArticlesActivity extends BaseActivityWithToolbar implements Connect
 
     /**
      * Gets articles with Retrofit service from
-     * http://hypermedia.projectchronos.eu/articles/?api=true and sets them and next page
+     * http://hypermedia.projectchronos.eu/articles/v04/ and sets them and next page
      * in private variables.
      * <p/>
      * If any bookmark is passed, it opens it, otherwise opens the base page.
@@ -323,7 +339,7 @@ public class ArticlesActivity extends BaseActivityWithToolbar implements Connect
      *
      * @param bookmark the bookmark to get. If it is null it retrieves the base page.
      */
-    private void getArticles(final String bookmark) {
+    private void getArticlesFromService(final String bookmark) {
         // Creates asynchronous call
         Call<ResponseArticlesList> articles = projectChronosService.getArticles(bookmark);
         articles.enqueue(new Callback<ResponseArticlesList>() {
@@ -355,8 +371,9 @@ public class ArticlesActivity extends BaseActivityWithToolbar implements Connect
 
                             // Gets all keywords associated
                             String url = HTTPUtil.splitQuery(new URL(article.getKeywordsUrl())).get("url").get(0);
-                            getKeywords(articleId, url);
+                            getKeywordsFromService(articleId, url);
 
+                            // Creates article's card
                             Card card = new Card.Builder(getBaseContext())
                                     .setTag(application.getArticleDao().load(articleId))  // Gets the article from db
                                     .withProvider(ArticleCardProvider.class)
@@ -371,22 +388,9 @@ public class ArticlesActivity extends BaseActivityWithToolbar implements Connect
                         //TODO: Issue #11
                     }
                 } else {
-
-                    articleList = application.getArticleDao().loadAll();
-
-                    for (Article article : articleList) {
-                        Card card = new Card.Builder(getBaseContext())
-                                .setTag(article)
-                                .withProvider(ArticleCardProvider.class)
-                                .endConfig()
-                                .build();
-
-                        articlesMaterialListView.add(card);
-                    }
-
                     // TODO: manage in better way error
                     try {
-                        Log.e(TAG, String.format("Response not succeed in getArticles: %s", response.errorBody().string()));
+                        Log.e(TAG, String.format("Response not succeed in getArticlesFromService: %s", response.errorBody().string()));
                     } catch (IOException e) {
                         Log.e(TAG, "onResponse in getArticle", e);
                     }
@@ -402,14 +406,32 @@ public class ArticlesActivity extends BaseActivityWithToolbar implements Connect
     }
 
     /**
+     * Gets all articles from the local db.
+     * TODO: See #18
+     */
+    private void getArticlesFromDb() {
+        articleList = application.getArticleDao().loadAll();
+
+        for (Article article : articleList) {
+            Card card = new Card.Builder(getBaseContext())
+                    .setTag(article)
+                    .withProvider(ArticleCardProvider.class)
+                    .endConfig()
+                    .build();
+
+            articlesMaterialListView.add(card);
+        }
+    }
+
+    /**
      * Gets keywords of an article with Retrofit service from
-     * http://hypermedia.projectchronos.eu/articles/?api=true&url= and sets them into
+     * http://hypermedia.projectchronos.eu/articles/v04/url=URL and sets them into
      * the article passed.
      *
      * @param articleId the article id where sets the keywords list downloaded.
      * @param url       the URL where gets the keywords.
      */
-    private void getKeywords(final long articleId, String url) {
+    private void getKeywordsFromService(final long articleId, String url) {
         // Creates asynchronous call
         Call<ResponseKeywordsList> keywords = projectChronosService.getKeywords(url);
         keywords.enqueue(new Callback<ResponseKeywordsList>() {
@@ -422,14 +444,11 @@ public class ArticlesActivity extends BaseActivityWithToolbar implements Connect
                     // Gets keywords list
                     List<Keyword> keywordList = responseKeywordsList.getKeywords();
 
-                    Log.i(TAG, keywordList.toString());
-
                     // For all keywords
                     for (Keyword keyword : keywordList) {
                         try {
                             // Saves it into database
                             long keywordId = application.getKeywordDao().getOrInsert(keyword);
-                            Log.v(TAG, String.format("keyword has id: %d", keywordId));
 
                             // Associates it with article
                             KeywordToArticles keywordToArticles = new KeywordToArticles();
@@ -437,20 +456,19 @@ public class ArticlesActivity extends BaseActivityWithToolbar implements Connect
                             keywordToArticles.setArticleId(articleId);
 
                             // Saves it into databases
-                            long keywordToArticlesId = application.getKeywordToArticlesDao().getOrInsert(keywordToArticles);
+                            application.getKeywordToArticlesDao().getOrInsert(keywordToArticles);
 
-                            Log.v(TAG, String.format("keywordToArticles has id: %d", keywordToArticlesId));
                         } catch (SQLiteConstraintException exception) {
-                            Log.e(TAG, "Error in onFailure in getKeywords", exception);
+                            Log.e(TAG, "Error in onFailure in getKeywordsFromService", exception);
                         }
                     }
 
                 } else {
                     // TODO: manage in better way error
                     try {
-                        Log.e(TAG, String.format("Response not succeed in getKeywords: %s", response.errorBody().string()));
+                        Log.e(TAG, String.format("Response not succeed in getKeywordsFromService: %s", response.errorBody().string()));
                     } catch (IOException e) {
-                        Log.e(TAG, "onResponse in getKeywords", e);
+                        Log.e(TAG, "onResponse in getKeywordsFromService", e);
                     }
                 }
             }
@@ -458,22 +476,9 @@ public class ArticlesActivity extends BaseActivityWithToolbar implements Connect
             @Override
             public void onFailure(Throwable t) {
                 // TODO: manage in better way error
-                Log.e(TAG, "Error in onFailure in getKeywords", t);
+                //Log.e(TAG, "Error in onFailure in getKeywordsFromService", t);
             }
         });
-    }
-
-    /**
-     * Prepares all the stuffs in order to use an optimized CustomTabs.
-     * */
-    private void prepareCustomTab() {
-        // Binds to the custom tab service
-        bindCustomTabsService();
-
-        // Warmup the browser process
-        if (customTabsClient != null) {
-            customTabsClient.warmup(0);
-        }
     }
 
     /**
@@ -490,7 +495,6 @@ public class ArticlesActivity extends BaseActivityWithToolbar implements Connect
             for (Article article : articleList) {
 
                 String url = article.getUrl();
-                Log.v(TAG, String.format("Url to add to bundle: %s", url));
                 if (bundleList.size() == 0) {
                     Bundle bundle = new Bundle();
                     bundle.putParcelable(CustomTabsService.KEY_URL, Uri.parse(url));
