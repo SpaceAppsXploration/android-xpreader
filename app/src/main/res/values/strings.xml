@@ -22,6 +22,9 @@
 
     <!-- Activity Articles -->
     <string name="empty_article_list">There are no articles yet for you</string>
+    <!-- TODO: improve -->
+    <string name="connection_error">There is no connection</string>
+    <string name="captive_error">You are not online, maybe you are in a captive network, please sign-in</string>
 
     <!-- Article card -->
     <string name="stored">stored</string>

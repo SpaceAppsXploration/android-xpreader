@@ -20,6 +20,7 @@ import android.content.ComponentName;
 import android.database.sqlite.SQLiteConstraintException;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.customtabs.CustomTabsCallback;
@@ -28,11 +29,13 @@ import android.support.customtabs.CustomTabsIntent;
 import android.support.customtabs.CustomTabsService;
 import android.support.customtabs.CustomTabsServiceConnection;
 import android.support.customtabs.CustomTabsSession;
+import android.support.design.widget.Snackbar;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.LinearLayout;
 
 import com.dexafree.materialList.card.Card;
@@ -79,14 +82,23 @@ public class ArticlesActivity extends BaseActivityWithToolbar implements Connect
     private static final String BASE_URL = "http://hypermedia.projectchronos.eu/";
 
     /**
+     * Rootview of activity.
+     */
+    protected
+    @Bind(R.id.root_view)
+    View rootView;
+
+    /**
      * Articles MaterialListView.
      */
+    protected
     @Bind(R.id.material_article_list)
     MaterialListView articlesMaterialListView;
 
     /**
      * Empty LinearLayout.
      */
+    protected
     @Bind(R.id.empty_article_view)
     LinearLayout emptyArticleTextView;
 
@@ -98,7 +110,7 @@ public class ArticlesActivity extends BaseActivityWithToolbar implements Connect
     /**
      * Last next page URL.
      */
-    private String next;
+    private String next = null;
 
     /**
      * Custom Tabs Session.
@@ -126,9 +138,14 @@ public class ArticlesActivity extends BaseActivityWithToolbar implements Connect
     private App application;
 
     /**
-     *
+     * Broadcast receiver for connection changes.
      */
-    private ConnectionReceiver connectionHelper;
+    private ConnectionReceiver connectionReceiver;
+
+    /**
+     * Snackbar for connectivity errors.
+     */
+    private Snackbar connectionSnackbar;
 
     @Override
     protected int getLayoutResourceId() {
@@ -147,23 +164,26 @@ public class ArticlesActivity extends BaseActivityWithToolbar implements Connect
         getSupportActionBar().setDisplayHomeAsUpEnabled(false);
         getSupportActionBar().setTitle(R.string.title_activity_articles);
 
-        // Get application
+        // Gets application
         application = ((App) getApplication());
 
         // Binds views
         ButterKnife.bind(this);
 
-        // Prepare list view
+        // Prepares Snackbar for error
+        prepareSnackBar();
+
+        // Prepares list view
         prepareMaterialListView();
 
         // Creates service
         createProjectChronosService();
 
         // Create BroadcastReceiver for connectivity checking
-        connectionHelper = new ConnectionReceiver();
+        connectionReceiver = new ConnectionReceiver();
 
         // Gets articles
-        getArticles(null);
+        getArticles(next);
 
         // Prepares custom tab
         prepareCustomTab();
@@ -171,7 +191,6 @@ public class ArticlesActivity extends BaseActivityWithToolbar implements Connect
         Log.v(TAG, String.format("Articles from db: %s", String.valueOf(application.getArticleDao().loadAll())));
         Log.v(TAG, String.format("Keywords from db: %s", String.valueOf(application.getKeywordDao().loadAll())));
         Log.v(TAG, String.format("KeywordToArticles from db: %s", String.valueOf(application.getKeywordToArticlesDao().loadAll())));
-
     }
 
     @Override
@@ -196,25 +215,51 @@ public class ArticlesActivity extends BaseActivityWithToolbar implements Connect
     protected void onResume() {
         super.onResume();
         // Start connectivity checker
-        connectionHelper.register(this);
+        connectionReceiver.register(this);
     }
 
     @Override
     protected void onPause() {
         super.onPause();
         // Stop connectivity checker
-        connectionHelper.unRegister(this);
+        connectionReceiver.unRegister(this);
     }
 
     @Override
     protected void onDestroy() {
         // Releases service
-        unbindCustomTabsService();
+        unBindCustomTabsService();
         super.onDestroy();
     }
 
     /**
-     *
+     * Prepares snackbar with style and callback
+     */
+    private void prepareSnackBar() {
+        // Creates snackbar
+        connectionSnackbar = Snackbar.make(rootView, R.string.app_name, Snackbar.LENGTH_INDEFINITE);
+        // Sets callback for dismiss event
+        connectionSnackbar.setCallback(new Snackbar.Callback() {
+            @Override
+            public void onDismissed(Snackbar snackbar, int event) {
+                super.onDismissed(snackbar, event);
+
+                getArticles(next);  //TODO manage in better way otherwise it will get articles that are not requested yet
+            }
+        });
+
+        // Decorates snackbar
+        View snackBarView = connectionSnackbar.getView();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            snackBarView.setBackgroundColor(getColor(R.color.primary));
+        } else {
+            //noinspection deprecation
+            snackBarView.setBackgroundColor(getResources().getColor(R.color.primary));
+        }
+    }
+
+    /**
+     * Prepares material list view with empty view and listeners.
      */
     private void prepareMaterialListView() {
         // Sets empty view
@@ -558,7 +603,7 @@ public class ArticlesActivity extends BaseActivityWithToolbar implements Connect
     /**
      * Releases all resources used for CustomTabs.
      */
-    private void unbindCustomTabsService() {
+    private void unBindCustomTabsService() {
         if (customTabsServiceConnection == null) {
             return;
         }
@@ -571,5 +616,25 @@ public class ArticlesActivity extends BaseActivityWithToolbar implements Connect
     @Override
     public void onConnectionChanged(boolean isConnected, boolean isOnline) {
         Log.i(TAG, String.format("Connection changed, now is connected %s and is online %s", isConnected, isOnline));
+
+        if (!isConnected) {
+            if (!connectionSnackbar.isShown()) {
+                // Shows no connection error
+                connectionSnackbar.setText(R.string.connection_error).show();
+            }
+        } else if (!isOnline) {
+            if (!connectionSnackbar.isShown()) {
+                // Shows captive error
+                connectionSnackbar.setText(R.string.captive_error).show();
+            }
+        } else {
+            if (connectionSnackbar.isShown()) {
+                // Dismisses snackbar
+                connectionSnackbar.dismiss();
+
+                // Prepares for the future
+                prepareSnackBar();
+            }
+        }
     }
 }
