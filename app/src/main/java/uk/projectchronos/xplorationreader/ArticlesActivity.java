@@ -85,23 +85,20 @@ public class ArticlesActivity extends BaseActivityWithToolbar implements Connect
     /**
      * Rootview of activity.
      */
-    protected
     @Bind(R.id.root_view)
-    View rootView;
+    protected View rootView;
 
     /**
      * Articles MaterialListView.
      */
-    protected
     @Bind(R.id.material_article_list)
-    MaterialListView articlesMaterialListView;
+    protected MaterialListView articlesMaterialListView;
 
     /**
      * Empty LinearLayout.
      */
-    protected
     @Bind(R.id.empty_article_view)
-    LinearLayout emptyArticleTextView;
+    protected LinearLayout emptyArticleTextView;
 
     /**
      * List of articles.
@@ -188,10 +185,6 @@ public class ArticlesActivity extends BaseActivityWithToolbar implements Connect
 
         // Prepares custom tab
         prepareCustomTab();
-
-        Log.v(TAG, String.format("Articles from db: %s", String.valueOf(application.getArticleDao().loadAll())));
-        Log.v(TAG, String.format("Keywords from db: %s", String.valueOf(application.getKeywordDao().loadAll())));
-        Log.v(TAG, String.format("KeywordToArticles from db: %s", String.valueOf(application.getKeywordToArticlesDao().loadAll())));
     }
 
     @Override
@@ -349,11 +342,13 @@ public class ArticlesActivity extends BaseActivityWithToolbar implements Connect
                     // Gets response's body
                     ResponseArticlesList responseArticlesList = response.body();
 
+                    List<Article> articleListFetched = responseArticlesList.getArticles();
+
                     // Adds all articles retrieved
-                    articleList.addAll(responseArticlesList.getArticles());
+                    articleList.addAll(articleListFetched);
 
                     // Prefetches articles
-                    prefetchArticles();
+                    prefetchArticles(articleListFetched);
 
                     // Gets next page from next url
                     String nextUrl = responseArticlesList.getNext();
@@ -484,7 +479,7 @@ public class ArticlesActivity extends BaseActivityWithToolbar implements Connect
     /**
      * Prefetches contents of articles shown in the list.
      */
-    private void prefetchArticles() {
+    private void prefetchArticles(List<Article> articleList) {
         // Gets actual session and prefetch some contents
         customTabsSession = getSession();
         if (customTabsClient != null) {

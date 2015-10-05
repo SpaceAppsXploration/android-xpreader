@@ -18,11 +18,13 @@ package uk.projectchronos.xplorationreader.card;
 
 import android.support.annotation.NonNull;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.dexafree.materialList.card.Card;
 import com.dexafree.materialList.card.provider.CardProvider;
 import com.greenfrvr.hashtagview.HashtagView;
+import com.squareup.picasso.Picasso;
 
 import java.text.DateFormat;
 import java.util.Date;
@@ -45,25 +47,31 @@ public class ArticleCardProvider extends CardProvider {
      * Title TextView.
      */
     @Bind(R.id.title_text_view)
-    TextView titleTextView;
+    protected TextView titleTextView;
 
     /**
      * Date TextView.
      */
     @Bind(R.id.date_text_view)
-    TextView dateTextView;
+    protected TextView dateTextView;
 
     /**
      * Abstract TextView.
      */
     @Bind(R.id.abstract_text_view)
-    TextView abstractTextView;
+    protected TextView abstractTextView;
 
     /**
      * Keywords HashtagView.
      */
     @Bind(R.id.keywords_hashtag)
-    HashtagView keywordHashtagView;
+    protected HashtagView keywordHashtagView;
+
+    /**
+     * Agency's ImageView.
+     */
+    @Bind(R.id.agency_image_view)
+    protected ImageView agencyImageView;
 
     @Override
     public int getLayout() {
@@ -106,6 +114,15 @@ public class ArticleCardProvider extends CardProvider {
                     return keyword.getValue();  // In this way the tag shows the keywords' value
                 }
             });
+
+            // Sets image view
+            Picasso.with(getContext())
+                    .load("http://icons.better-idea.org/api/icons?url=" + article.getUrl() + "&i_am_feeling_lucky=yes")
+                    .placeholder(R.drawable.ic_earh)    // TODO: randomize
+                    .fit()
+                    .centerInside()
+                    .noFade()
+                    .into(agencyImageView);
         }
     }
 }
