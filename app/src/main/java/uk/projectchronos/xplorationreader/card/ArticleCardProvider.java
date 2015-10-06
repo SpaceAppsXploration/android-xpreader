@@ -35,7 +35,6 @@ import butterknife.Bind;
 import butterknife.ButterKnife;
 import uk.projectchronos.xplorationreader.R;
 import uk.projectchronos.xplorationreader.model.Article;
-import uk.projectchronos.xplorationreader.model.Keyword;
 
 /**
  * Custom CardProvider that allows us to create own Article Card.
@@ -110,13 +109,13 @@ public class ArticleCardProvider extends CardProvider {
             abstractTextView.setAutoLinkMask(Linkify.ALL);  // Add link's capability
             abstractTextView.setMovementMethod(null);   // Disables scrolling added by setAutoLinkMask
 
-            // Sets keywords
-            keywordHashtagView.setData(article.getKeywordsList(), new HashtagView.DataTransform<Keyword>() {
+            // Sets keywords TODO
+/*            keywordHashtagView.setData(article.getKeywordsList(), new HashtagView.DataTransform<Keyword>() {
                 @Override
                 public CharSequence prepare(Keyword keyword) {
                     return keyword.getValue();  // In this way the tag shows the keywords' value
                 }
-            });
+            });*/
 
             // Sets image view
             Picasso.with(getContext())

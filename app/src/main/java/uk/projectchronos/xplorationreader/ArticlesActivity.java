@@ -17,7 +17,6 @@
 package uk.projectchronos.xplorationreader;
 
 import android.content.ComponentName;
-import android.database.sqlite.SQLiteConstraintException;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Build;
@@ -60,8 +59,6 @@ import retrofit.Retrofit;
 import uk.projectchronos.xplorationreader.api.ProjectChronosService;
 import uk.projectchronos.xplorationreader.card.ArticleCardProvider;
 import uk.projectchronos.xplorationreader.model.Article;
-import uk.projectchronos.xplorationreader.model.Keyword;
-import uk.projectchronos.xplorationreader.model.KeywordToArticles;
 import uk.projectchronos.xplorationreader.model.ResponseArticlesList;
 import uk.projectchronos.xplorationreader.model.ResponseKeywordsList;
 import uk.projectchronos.xplorationreader.utils.BaseActivityWithToolbar;
@@ -125,11 +122,6 @@ public class ArticlesActivity extends BaseActivityWithToolbar implements Connect
     private ProjectChronosService projectChronosService;
 
     /**
-     * Application useful in order to call singletons.
-     */
-    private App application;
-
-    /**
      * Broadcast receiver for connection changes.
      */
     private ConnectionReceiver connectionReceiver;
@@ -156,9 +148,6 @@ public class ArticlesActivity extends BaseActivityWithToolbar implements Connect
         getSupportActionBar().setDisplayHomeAsUpEnabled(false);
         getSupportActionBar().setTitle(R.string.title_activity_articles);
 
-        // Gets application
-        application = ((App) getApplication());
-
         // Binds views
         ButterKnife.bind(this);
 
@@ -175,7 +164,7 @@ public class ArticlesActivity extends BaseActivityWithToolbar implements Connect
         connectionReceiver = new ConnectionReceiver();
 
         // Gets articles
-        getArticlesFromService(next);
+        getArticles(next);
 
         // Prepares custom tab
         prepareCustomTab();
@@ -232,7 +221,7 @@ public class ArticlesActivity extends BaseActivityWithToolbar implements Connect
             public void onDismissed(Snackbar snackbar, int event) {
                 super.onDismissed(snackbar, event);
 
-                getArticlesFromService(next);  //TODO manage in better way otherwise it will get articles that are not requested yet
+                getArticles(next);  //TODO manage in better way otherwise it will get articles that are not requested yet
             }
         });
 
@@ -260,7 +249,7 @@ public class ArticlesActivity extends BaseActivityWithToolbar implements Connect
         articlesMaterialListView.addOnScrollListener(new EndlessRecyclerOnScrollListener(linearLayoutManager) {
             @Override
             public void onLoadMore() {
-                getArticlesFromService(next);
+                getArticles(next);
             }
         });
 
@@ -324,7 +313,7 @@ public class ArticlesActivity extends BaseActivityWithToolbar implements Connect
      *
      * @param bookmark the bookmark to get. If it is null it retrieves the base page.
      */
-    private void getArticlesFromService(final String bookmark) {
+    private void getArticles(final String bookmark) {
         // Creates asynchronous call
         Call<ResponseArticlesList> articles = projectChronosService.getArticles(bookmark);
         articles.enqueue(new Callback<ResponseArticlesList>() {
@@ -333,7 +322,6 @@ public class ArticlesActivity extends BaseActivityWithToolbar implements Connect
                 if (response.isSuccess() && response.body() != null) {
                     // Gets response's body
                     ResponseArticlesList responseArticlesList = response.body();
-
                     List<Article> articleList = responseArticlesList.getArticles();
 
                     // Prefetches articles
@@ -346,16 +334,13 @@ public class ArticlesActivity extends BaseActivityWithToolbar implements Connect
 
                         // For all articles
                         for (Article article : articleList) {
-                            // Saves it into databases (or get it)
-                            long articleId = application.getArticleDao().getOrInsert(article);
 
                             // Gets all keywords associated
-                            String url = HTTPUtil.splitQuery(new URL(article.getKeywordsUrl())).get("url").get(0);
-                            getKeywordsFromService(articleId, url);
+                            getKeywords(article);
 
                             // Creates article's card
                             Card card = new Card.Builder(getBaseContext())
-                                    .setTag(application.getArticleDao().load(articleId))  // Gets the article from db
+                                    .setTag(article)  // Gets the article from db
                                     .withProvider(ArticleCardProvider.class)
                                     .endConfig()
                                     .build();
@@ -370,7 +355,7 @@ public class ArticlesActivity extends BaseActivityWithToolbar implements Connect
                 } else {
                     // TODO: manage in better way error
                     try {
-                        Log.e(TAG, String.format("Response not succeed in getArticlesFromService: %s", response.errorBody().string()));
+                        Log.e(TAG, String.format("Response not succeed in getArticles: %s", response.errorBody().string()));
                     } catch (IOException e) {
                         Log.e(TAG, "onResponse in getArticle", e);
                     }
@@ -386,32 +371,20 @@ public class ArticlesActivity extends BaseActivityWithToolbar implements Connect
     }
 
     /**
-     * Gets all articles from the local db.
-     * TODO: See #18
-     */
-    private void getArticlesFromDb() {
-        List<Article> articleList = application.getArticleDao().loadAll();
-
-        for (Article article : articleList) {
-            Card card = new Card.Builder(getBaseContext())
-                    .setTag(article)
-                    .withProvider(ArticleCardProvider.class)
-                    .endConfig()
-                    .build();
-
-            articlesMaterialListView.add(card);
-        }
-    }
-
-    /**
      * Gets keywords of an article with Retrofit service from
      * http://hypermedia.projectchronos.eu/articles/v04/url=URL and sets them into
      * the article passed.
      *
-     * @param articleId the article id where sets the keywords list downloaded.
-     * @param url       the URL where gets the keywords.
+     * @param article   the Article in wich put keywords.
      */
-    private void getKeywordsFromService(final long articleId, String url) {
+    private void getKeywords(final Article article) {
+        String url = null;
+        try {
+            url = HTTPUtil.splitQuery(new URL(article.getKeywordsUrl())).get("url").get(0);
+        } catch (MalformedURLException exception) {
+            Log.e(TAG, "error in getKeywords", exception);
+        }
+
         // Creates asynchronous call
         Call<ResponseKeywordsList> keywords = projectChronosService.getKeywords(url);
         keywords.enqueue(new Callback<ResponseKeywordsList>() {
@@ -421,33 +394,14 @@ public class ArticlesActivity extends BaseActivityWithToolbar implements Connect
                     // Gets response's body
                     ResponseKeywordsList responseKeywordsList = response.body();
 
-                    // Gets keywords list
-                    List<Keyword> keywordList = responseKeywordsList.getKeywords();
-
-                    // For all keywords
-                    for (Keyword keyword : keywordList) {
-                        try {
-                            // Saves it into database
-                            long keywordId = application.getKeywordDao().getOrInsert(keyword);
-
-                            // Associates it with article
-                            KeywordToArticles keywordToArticles = new KeywordToArticles();
-                            keywordToArticles.setKeywordId(keywordId);
-                            keywordToArticles.setArticleId(articleId);
-
-                            // Saves it into databases
-                            application.getKeywordToArticlesDao().getOrInsert(keywordToArticles);
-
-                        } catch (SQLiteConstraintException exception) {
-                            Log.e(TAG, "Error in onFailure in getKeywordsFromService", exception);
-                        }
-                    }
+                    // Sets article's keywords list
+                    article.setKeywordsList(responseKeywordsList.getKeywords());
                 } else {
                     // TODO: manage in better way error
                     try {
-                        Log.e(TAG, String.format("Response not succeed in getKeywordsFromService: %s", response.errorBody().string()));
+                        Log.e(TAG, String.format("Response not succeed in getKeywords: %s", response.errorBody().string()));
                     } catch (IOException e) {
-                        Log.e(TAG, "onResponse in getKeywordsFromService", e);
+                        Log.e(TAG, "onResponse in getKeywords", e);
                     }
                 }
             }
@@ -455,7 +409,7 @@ public class ArticlesActivity extends BaseActivityWithToolbar implements Connect
             @Override
             public void onFailure(Throwable t) {
                 // TODO: manage in better way error
-                //Log.e(TAG, "Error in onFailure in getKeywordsFromService", t);
+                //Log.e(TAG, "Error in onFailure in getKeywords", t);
             }
         });
     }
