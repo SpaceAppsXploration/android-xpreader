@@ -57,7 +57,6 @@ import retrofit.Callback;
 import retrofit.GsonConverterFactory;
 import retrofit.Response;
 import retrofit.Retrofit;
-import uk.projectchronos.xplorationreader.api.KeywordAdapterFactory;
 import uk.projectchronos.xplorationreader.api.ProjectChronosService;
 import uk.projectchronos.xplorationreader.card.ArticleCardProvider;
 import uk.projectchronos.xplorationreader.model.Article;
@@ -99,11 +98,6 @@ public class ArticlesActivity extends BaseActivityWithToolbar implements Connect
      */
     @Bind(R.id.empty_article_view)
     protected LinearLayout emptyArticleTextView;
-
-    /**
-     * List of articles.
-     */
-    private List<Article> articleList = new ArrayList<>();
 
     /**
      * Last next page URL.
@@ -221,9 +215,9 @@ public class ArticlesActivity extends BaseActivityWithToolbar implements Connect
 
     @Override
     protected void onDestroy() {
+        super.onDestroy();
         // Releases service
         unBindCustomTabsService();
-        super.onDestroy();
     }
 
     /**
@@ -303,14 +297,12 @@ public class ArticlesActivity extends BaseActivityWithToolbar implements Connect
     }
 
     /**
-     * Creates Retrofit's ProjectChronosService with custom typeAdapter.
+     * Creates Retrofit's ProjectChronosService.
      */
     private void createProjectChronosService() {
-        // Create new Gson throw GsonBuilder in order to extend it and parse a String[] of keywords
-        // into a List<Keyword> thanks to KeywordAdapter
+        // Set data format
         Gson gson = new GsonBuilder()
                 .setDateFormat("yyyy-MM-dd'T'HH:mm:ss")
-                .registerTypeAdapterFactory(new KeywordAdapterFactory())
                 .create();
 
         // Create Retrofit service with our KeywordAdapter
@@ -342,21 +334,14 @@ public class ArticlesActivity extends BaseActivityWithToolbar implements Connect
                     // Gets response's body
                     ResponseArticlesList responseArticlesList = response.body();
 
-                    List<Article> articleListFetched = responseArticlesList.getArticles();
-
-                    // Adds all articles retrieved
-                    articleList.addAll(articleListFetched);
+                    List<Article> articleList = responseArticlesList.getArticles();
 
                     // Prefetches articles
-                    prefetchArticles(articleListFetched);
+                    prefetchArticles(articleList);
 
                     // Gets next page from next url
                     String nextUrl = responseArticlesList.getNext();
                     try {
-                        if (BuildConfig.DEBUG)
-                            Log.v(TAG, String.format("Total articles downloaded: %d\nArticles: %s", articleList.size(), articleList.toString()));
-                        if (BuildConfig.DEBUG) Log.v(TAG, String.format("NextUrl: %s", nextUrl));
-
                         next = HTTPUtil.splitQuery(new URL(nextUrl)).get("bookmark").get(0);
 
                         // For all articles
@@ -405,7 +390,7 @@ public class ArticlesActivity extends BaseActivityWithToolbar implements Connect
      * TODO: See #18
      */
     private void getArticlesFromDb() {
-        articleList = application.getArticleDao().loadAll();
+        List<Article> articleList = application.getArticleDao().loadAll();
 
         for (Article article : articleList) {
             Card card = new Card.Builder(getBaseContext())
@@ -457,7 +442,6 @@ public class ArticlesActivity extends BaseActivityWithToolbar implements Connect
                             Log.e(TAG, "Error in onFailure in getKeywordsFromService", exception);
                         }
                     }
-
                 } else {
                     // TODO: manage in better way error
                     try {

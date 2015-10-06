@@ -17,6 +17,7 @@
 package uk.projectchronos.xplorationreader.card;
 
 import android.support.annotation.NonNull;
+import android.text.util.Linkify;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -106,6 +107,8 @@ public class ArticleCardProvider extends CardProvider {
 
             // Sets abstract
             abstractTextView.setText(article.get_abstract());
+            abstractTextView.setAutoLinkMask(Linkify.ALL);  // Add link's capability
+            abstractTextView.setMovementMethod(null);   // Disables scrolling added by setAutoLinkMask
 
             // Sets keywords
             keywordHashtagView.setData(article.getKeywordsList(), new HashtagView.DataTransform<Keyword>() {
@@ -121,7 +124,6 @@ public class ArticleCardProvider extends CardProvider {
                     .placeholder(R.drawable.ic_earh)    // TODO: randomize
                     .fit()
                     .centerInside()
-                    .noFade()
                     .into(agencyImageView);
         }
     }

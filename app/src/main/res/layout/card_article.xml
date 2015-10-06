@@ -103,8 +103,6 @@
                 android:layout_marginLeft="@dimen/big_padding"
                 android:layout_marginRight="@dimen/big_padding"
                 android:layout_marginTop="@dimen/small_padding"
-                android:ellipsize="end"
-                android:maxLines="3"
                 tools:text="Abstract: At the land surface, higher soil moisture levels generally lead to both increased evaporation for a given amount of incoming radiation (increased evaporation efficiency) and increased runoff for a given amount of precipitation (increased runoff efficiency). Evaporation efficiency and runoff efficiency can thus be said to vary with each other, motivating the development of a unique hydroclimatic analysis framework. Using a simple water balance model fitted, in different experiments, with a wid..." />
 
         </LinearLayout>
