@@ -52,11 +52,11 @@ public abstract class EndlessRecyclerOnScrollListener extends RecyclerView.OnScr
                 <= (firstVisibleItem + visibleThreshold)) {
             // End has been reached
 
-            onLoadMore();
-
-            loading = true;
+            if (onLoadMore()) {
+                loading = true;
+            }
         }
     }
 
-    public abstract void onLoadMore();
+    public abstract boolean onLoadMore();
 }

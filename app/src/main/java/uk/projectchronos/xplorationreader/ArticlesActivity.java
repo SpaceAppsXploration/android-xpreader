@@ -21,7 +21,6 @@ import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
 import android.support.customtabs.CustomTabsCallback;
 import android.support.customtabs.CustomTabsClient;
 import android.support.customtabs.CustomTabsIntent;
@@ -37,9 +36,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.LinearLayout;
 
-import com.dexafree.materialList.card.Card;
-import com.dexafree.materialList.listeners.RecyclerItemClickListener;
-import com.dexafree.materialList.view.MaterialListView;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
@@ -51,13 +47,16 @@ import java.util.List;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
+import butterknife.OnClick;
 import retrofit.Call;
 import retrofit.Callback;
 import retrofit.GsonConverterFactory;
 import retrofit.Response;
 import retrofit.Retrofit;
+import uk.projectchronos.xplorationreader.adapter.ArticleAdapter;
+import uk.projectchronos.xplorationreader.adapter.OnCardClickListener;
+import uk.projectchronos.xplorationreader.adapter.RecyclerViewEmptySupport;
 import uk.projectchronos.xplorationreader.api.ProjectChronosService;
-import uk.projectchronos.xplorationreader.card.ArticleCardProvider;
 import uk.projectchronos.xplorationreader.model.Article;
 import uk.projectchronos.xplorationreader.model.ResponseArticlesList;
 import uk.projectchronos.xplorationreader.model.ResponseKeywordsList;
@@ -76,60 +75,70 @@ public class ArticlesActivity extends BaseActivityWithToolbar implements Connect
     /**
      * Base url for API service.
      */
-    private static final String BASE_URL = "http://hypermedia.projectchronos.eu/";
-
+    private static final String BASE_URL = "http://hypermedia.projectchronos.eu/";//"http://rdfendpoints.appspot.com/";
     /**
      * Rootview of activity.
      */
     @Bind(R.id.root_view)
     protected View rootView;
-
     /**
-     * Articles MaterialListView.
+     * Articles RecyclerView.
      */
-    @Bind(R.id.material_article_list)
-    protected MaterialListView articlesMaterialListView;
-
+    @Bind(R.id.article_recycler_view)
+    protected RecyclerViewEmptySupport articleRecyclerView;
     /**
      * Empty LinearLayout.
      */
     @Bind(R.id.empty_article_view)
-    protected LinearLayout emptyArticleTextView;
-
+    protected LinearLayout emptyArticleView;
     /**
      * Last next page URL.
      */
     private String next = null;
-
     /**
      * Custom Tabs Session.
      */
     private CustomTabsSession customTabsSession;
-
     /**
      * Custom Tabs Client.
      */
     private CustomTabsClient customTabsClient;
-
     /**
      * Custom Tabs Service Connection.
      */
     private CustomTabsServiceConnection customTabsServiceConnection;
-
     /**
      * ProjectChronosService that allows to access to articles and keywords API.
      */
     private ProjectChronosService projectChronosService;
-
     /**
      * Broadcast receiver for connection changes.
      */
     private ConnectionReceiver connectionReceiver;
-
     /**
      * Snackbar for connectivity errors.
      */
     private Snackbar connectionSnackbar;
+    /**
+     * Adapter for RecyclerView.
+     */
+    private ArticleAdapter articleAdapter;
+    /**
+     * List of all articles fetched.
+     */
+    private List<Article> articleList = new ArrayList<>();
+    /**
+     * Indicates if the user is viewing all the articles or just of a certain kind.
+     * <p/>
+     * If is in filterMode the app does not load more results.
+     */
+    private boolean filterMode = false;
+
+    // Allows to go to the top of the list just by clicking toolbar
+    @OnClick(R.id.toolbar)
+    void goToTheTop() {
+        articleRecyclerView.smoothScrollToPosition(0); //.getLayoutManager().scrollToPosition(0);
+    }
 
     @Override
     protected int getLayoutResourceId() {
@@ -155,7 +164,7 @@ public class ArticlesActivity extends BaseActivityWithToolbar implements Connect
         prepareSnackBar();
 
         // Prepares list view
-        prepareMaterialListView();
+        prepareRecylerView();
 
         // Creates service
         createProjectChronosService();
@@ -183,6 +192,76 @@ public class ArticlesActivity extends BaseActivityWithToolbar implements Connect
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         switch (item.getItemId()) {
+
+            // Filters medias
+            case R.id.medias_filter:
+                articleRecyclerView.getLayoutManager().scrollToPosition(0);
+                articleAdapter.animateTo(filter(Article.Type.MEDIA));
+
+                return true;
+
+            // Filters links
+            case R.id.links_filter:
+                articleRecyclerView.getLayoutManager().scrollToPosition(0);
+                articleAdapter.animateTo(filter(Article.Type.LINK));
+
+                return true;
+
+            // Filters Facebook posts
+            case R.id.fb_post_filter:
+                articleRecyclerView.getLayoutManager().scrollToPosition(0);
+                articleAdapter.animateTo(filter(Article.Type.FB_POST));
+
+                return true;
+
+            // Filters tweets
+            case R.id.tweets_filter:
+                articleRecyclerView.getLayoutManager().scrollToPosition(0);
+                articleAdapter.animateTo(filter(Article.Type.TWEET));
+
+                return true;
+
+            // Filters feeds
+            case R.id.feeds_filter:
+                articleRecyclerView.getLayoutManager().scrollToPosition(0);
+                articleAdapter.animateTo(filter(Article.Type.FEED));
+
+                return true;
+
+            // Filters PDF
+            case R.id.pdf_filter:
+                articleRecyclerView.getLayoutManager().scrollToPosition(0);
+                articleAdapter.animateTo(filter(Article.Type.PDF));
+
+                return true;
+
+            // Filters papers
+            case R.id.papers_filter:
+                articleRecyclerView.getLayoutManager().scrollToPosition(0);
+                articleAdapter.animateTo(filter(Article.Type.PAPER));
+
+                return true;
+
+            // Filters feeds
+            case R.id.movies_filter:
+                articleRecyclerView.getLayoutManager().scrollToPosition(0);
+                articleAdapter.animateTo(filter(Article.Type.MOVIE));
+
+                return true;
+
+            // Shows all articles
+            case R.id.all_filter:
+                articleRecyclerView.getLayoutManager().scrollToPosition(0);
+                articleAdapter.animateTo(articleList);
+
+                // Sets filter mode to false
+                filterMode = false;
+
+                return true;
+
+            case R.id.menu_search:
+                // TODO: see #10
+                return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
@@ -207,6 +286,29 @@ public class ArticlesActivity extends BaseActivityWithToolbar implements Connect
         super.onDestroy();
         // Releases service
         unBindCustomTabsService();
+    }
+
+    /**
+     * Filters article by type.
+     *
+     * @param type type to filter.
+     * @return the list of articles filtered.
+     */
+    private List<Article> filter(Article.Type type) {
+        // TODO improve using filter interface, see #22
+        final List<Article> filteredArticleList = new ArrayList<>();
+        for (Article article : articleList) {
+            final Article.Type articleType = article.getType();
+
+            if (articleType.equals(type)) {
+                filteredArticleList.add(article);
+            }
+        }
+
+        // Sets filter mode to true
+        filterMode = true;
+
+        return filteredArticleList;
     }
 
     /**
@@ -238,36 +340,39 @@ public class ArticlesActivity extends BaseActivityWithToolbar implements Connect
     /**
      * Prepares material list view with empty view and listeners.
      */
-    private void prepareMaterialListView() {
-        // Sets empty view
-        articlesMaterialListView.setEmptyView(emptyArticleTextView);
-
+    private void prepareRecylerView() {
+        // Sets layout manager
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
-        articlesMaterialListView.setLayoutManager(linearLayoutManager);
+        articleRecyclerView.setLayoutManager(linearLayoutManager);
 
         // Adds onScrollListener in order to download other artiles when user arrives to the bottom
-        articlesMaterialListView.addOnScrollListener(new EndlessRecyclerOnScrollListener(linearLayoutManager) {
+        articleRecyclerView.addOnScrollListener(new EndlessRecyclerOnScrollListener(linearLayoutManager) {
             @Override
-            public void onLoadMore() {
-                getArticles(next);
+            public boolean onLoadMore() {
+                if (!filterMode) {
+                    getArticles(next);
+                    return true;
+                } else {
+                    return false;
+                }
             }
         });
 
-        // Adds onItemTouchListener in order to open the Chrome Custom Tabs when card clicked
-        articlesMaterialListView.addOnItemTouchListener(new RecyclerItemClickListener.OnItemClickListener() {
+        // Sets empty view
+        articleRecyclerView.setEmptyView(emptyArticleView);
+
+        // Sets adapter
+        articleAdapter = new ArticleAdapter(this);
+        articleRecyclerView.setAdapter(articleAdapter);
+
+        // Sets onCardClickListener
+        articleAdapter.setOnCardClickListener(new OnCardClickListener() {
             @Override
-            public void onItemClick(@NonNull Card card, int i) {
-                Article article = (Article) card.getTag();
-                //TODO: manage in some way if article's url is null
+            public void onClick(View view, Article article) {
                 String url = article.getUrl();
                 Uri uri = Uri.parse(url);
 
                 launchCustomTabs(uri);
-            }
-
-            @Override
-            public void onItemLongClick(@NonNull Card card, int i) {
-                // Nothing to do here
             }
         });
     }
@@ -314,6 +419,7 @@ public class ArticlesActivity extends BaseActivityWithToolbar implements Connect
      * @param bookmark the bookmark to get. If it is null it retrieves the base page.
      */
     private void getArticles(final String bookmark) {
+        Log.i(TAG, "getArticles called");
         // Creates asynchronous call
         Call<ResponseArticlesList> articles = projectChronosService.getArticles(bookmark);
         articles.enqueue(new Callback<ResponseArticlesList>() {
@@ -322,32 +428,26 @@ public class ArticlesActivity extends BaseActivityWithToolbar implements Connect
                 if (response.isSuccess() && response.body() != null) {
                     // Gets response's body
                     ResponseArticlesList responseArticlesList = response.body();
-                    List<Article> articleList = responseArticlesList.getArticles();
+                    List<Article> articleListFetched = responseArticlesList.getArticles();
+
+                    // Add newly articles fetched
+                    articleList.addAll(articleListFetched);
+                    articleAdapter.addArticles(articleListFetched);
 
                     // Prefetches articles
-                    prefetchArticles(articleList);
+                    prefetchArticles(articleListFetched);
 
                     // Gets next page from next url
                     String nextUrl = responseArticlesList.getNext();
+
+                    // For all articles
+                    for (Article article : articleListFetched) {
+                        // Gets all keywords associated
+                        getKeywords(article);
+                    }
+
                     try {
                         next = HTTPUtil.splitQuery(new URL(nextUrl)).get("bookmark").get(0);
-
-                        // For all articles
-                        for (Article article : articleList) {
-
-                            // Gets all keywords associated
-                            getKeywords(article);
-
-                            // Creates article's card
-                            Card card = new Card.Builder(getBaseContext())
-                                    .setTag(article)  // Gets the article from db
-                                    .withProvider(ArticleCardProvider.class)
-                                    .endConfig()
-                                    .build();
-
-                            articlesMaterialListView.add(card);
-                        }
-
                     } catch (MalformedURLException e) {
                         Log.e(TAG, String.format("%s could not be parsed as a URL", nextUrl), e);
                         //TODO: Issue #11

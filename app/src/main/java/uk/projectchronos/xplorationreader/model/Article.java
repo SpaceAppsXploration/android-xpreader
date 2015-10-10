@@ -37,6 +37,7 @@ public class Article {
      */
     @Expose
     private String url;
+
     /**
      * Abstract (if present, else "" void string).
      */
@@ -45,7 +46,7 @@ public class Article {
     private String _abstract;
 
     /**
-     * URL to the array of keywords connected to this Article object, [] if no keyword.
+     * URL to the array of keywords connected to this Article object.
      */
     @Expose
     @SerializedName("keywords_url")
@@ -58,27 +59,27 @@ public class Article {
     private java.util.Date stored;
 
     /**
-     * Sring for date-time of publishing ISO 8601 format, else null.
+     * String for date-time of publishing ISO 8601 format, else null.
      */
     @Expose
     private java.util.Date published;
 
-    /**+
-     *
+    /**
+     * Represent the type of the article.
      */
     @Expose
     @SerializedName("type_of")
-    private String type;
+    private Type type;
 
     /**
-     *
+     * Boolean stating if the object is present in the Graph API.
      */
     @Expose
     @SerializedName("in_graph")
     private boolean inGraph;
 
     /**
-     *
+     * The id of the indexed resource.
      */
     @Expose
     private long uuid;
@@ -208,10 +209,64 @@ public class Article {
     /**
      * Sets keywords of the article.
      *
-     * @return the keywords list of the article.
+     * @return the keywords list to set.
      */
     public List<Keyword> setKeywordsList(List<Keyword> keywordsList) {
         return this.keywordsList = keywordsList;
+    }
+
+    /**
+     * Gets type of the article.
+     *
+     * @return the type of the article.
+     */
+    public Type getType() {
+        return type;
+    }
+
+    /**
+     * Sets type of the article.
+     *
+     * @param type the type to set.
+     */
+    public void setType(Type type) {
+        this.type = type;
+    }
+
+    /**
+     * Gets if the article is in graph API.
+     *
+     * @return true if it is in graph API, false otherwise.
+     */
+    public boolean isInGraph() {
+        return inGraph;
+    }
+
+    /**
+     * Sets if the article is in graph API.
+     *
+     * @param inGraph true if is in graph API, false otherwise.
+     */
+    public void setInGraph(boolean inGraph) {
+        this.inGraph = inGraph;
+    }
+
+    /**
+     * Gets the uuid of the article.
+     *
+     * @return the uuid of the article.
+     */
+    public long getUuid() {
+        return uuid;
+    }
+
+    /**
+     * Sets the uuid of the article.
+     *
+     * @param uuid the uuid to set.
+     */
+    public void setUuid(long uuid) {
+        this.uuid = uuid;
     }
 
     @Override
@@ -223,7 +278,7 @@ public class Article {
                 ", keywordsUrl='" + keywordsUrl + '\'' +
                 ", stored=" + stored +
                 ", published=" + published +
-                ", type='" + type + '\'' +
+                ", type=" + type +
                 ", inGraph=" + inGraph +
                 ", uuid=" + uuid +
                 ", keywordsList=" + keywordsList +
@@ -231,11 +286,55 @@ public class Article {
     }
 
     /**
-     *
+     * Type of article.
      */
-    private enum Type {
-        feed,
-        tweets,
-        fb
+    public enum Type {
+        /**
+         * Article.
+         */
+        @SerializedName("feed")
+        FEED,
+
+        /**
+         * Tweet.
+         */
+        @SerializedName("tweet")
+        TWEET,
+
+        /**
+         * Image.
+         */
+        @SerializedName("media")
+        MEDIA,
+
+        /**
+         * Link.
+         */
+        @SerializedName("link")
+        LINK,
+
+        /**
+         * PDF.
+         */
+        @SerializedName("pdf")
+        PDF,
+
+        /**
+         * Paper.
+         */
+        @SerializedName("paper")
+        PAPER,
+
+        /**
+         * Facebook post.
+         */
+        @SerializedName("fb")
+        FB_POST,
+
+        /**
+         * YouTube documentary.
+         */
+        @SerializedName("movie")
+        MOVIE
     }
 }

@@ -14,7 +14,63 @@
   ~    limitations under the License.
   -->
 
-<menu xmlns:tools="http://schemas.android.com/tools"
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     tools:context="uk.projectchronos.xplorationreader.ArticlesActivity">
+
+    <item
+        android:id="@+id/menu_filter"
+        android:icon="@drawable/ic_action_filter_list"
+        android:title="@string/filter_action"
+        app:showAsAction="always">
+
+        <menu>
+
+            <item
+                android:id="@+id/feeds_filter"
+                android:title="@string/feeds_filter" />
+
+            <item
+                android:id="@+id/medias_filter"
+                android:title="@string/medias_filter" />
+
+            <item
+                android:id="@+id/links_filter"
+                android:title="@string/links_filter" />
+
+            <item
+                android:id="@+id/pdf_filter"
+                android:title="@string/pdf_filter" />
+
+            <item
+                android:id="@+id/papers_filter"
+                android:title="@string/papers_filter" />
+
+            <item
+                android:id="@+id/movies_filter"
+                android:title="@string/movies_filter" />
+
+            <item
+                android:id="@+id/tweets_filter"
+                android:title="@string/tweets_filter" />
+
+            <item
+                android:id="@+id/fb_post_filter"
+                android:title="@string/fb_posts_filter" />
+
+            <item
+                android:id="@+id/all_filter"
+                android:title="@string/all_filter" />
+
+        </menu>
+
+    </item>
+
+    <item
+        android:id="@+id/menu_search"
+        android:icon="@drawable/ic_action_search"
+        android:title="@string/search_action"
+        app:showAsAction="ifRoom" />
 
 </menu>

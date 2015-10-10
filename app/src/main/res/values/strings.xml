@@ -30,4 +30,18 @@
     <string name="stored">stored</string>
     <string name="agency_icon_description">Agency icon</string>
 
+    <!-- Article menu -->
+    <string name="search_action">Search</string>
+    <string name="filter_action">Filter</string>
+
+    <string name="fb_posts_filter">Facebook posts</string>
+    <string name="medias_filter">Images</string>
+    <string name="links_filter">Links</string>
+    <string name="pdf_filter">PDF</string>
+    <string name="papers_filter">Papers</string>
+    <string name="movies_filter">Movies</string>
+    <string name="feeds_filter">Articles</string>
+    <string name="tweets_filter">Tweets</string>
+    <string name="all_filter">All</string>
+
 </resources>

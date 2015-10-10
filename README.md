@@ -15,14 +15,12 @@ We want to create something that works well in a well-written way, so we use som
 
 * [RxAndroid](https://github.com/ReactiveX/RxAndroid)
 * [retrofit](https://github.com/square/retrofit)
-* [greenDAO](https://github.com/greenrobot/greenDAO)
 * [butterknife](https://github.com/JakeWharton/butterknife)
 * [gson](https://github.com/google/gson)
 
 and also:
 
 * [HashtagView](https://github.com/greenfrvr/hashtag-view)
-* [MaterialList](https://github.com/dexafree/MaterialList)
 * [AboutLibraries](https://github.com/mikepenz/AboutLibraries)
 
 
