@@ -372,6 +372,7 @@ public class ArticlesActivity extends BaseActivityWithToolbar implements Connect
                 String url = article.getUrl();
                 Uri uri = Uri.parse(url);
 
+                // Launch custom tab
                 launchCustomTabs(uri);
             }
         });
@@ -546,7 +547,7 @@ public class ArticlesActivity extends BaseActivityWithToolbar implements Connect
      *
      * @param uri the URI to open into our CustomTabs.
      */
-    private void launchCustomTabs(Uri uri) {
+    public void launchCustomTabs(Uri uri) {
         CustomTabsIntent customTabsIntent = new CustomTabsIntent.Builder(getSession())
                 .setToolbarColor(ContextCompat.getColor(this, R.color.primary))
                 .setCloseButtonIcon(BitmapFactory.decodeResource(getResources(), R.drawable.ic_arrow_back))

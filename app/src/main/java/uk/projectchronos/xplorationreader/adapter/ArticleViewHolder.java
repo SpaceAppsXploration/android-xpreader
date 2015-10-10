@@ -17,7 +17,15 @@
 package uk.projectchronos.xplorationreader.adapter;
 
 import android.content.Context;
+import android.net.Uri;
 import android.support.v7.widget.RecyclerView;
+import android.text.Html;
+import android.text.Spannable;
+import android.text.SpannableString;
+import android.text.Spanned;
+import android.text.method.LinkMovementMethod;
+import android.text.style.URLSpan;
+import android.text.util.Linkify;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -32,6 +40,7 @@ import java.util.Locale;
 import butterknife.Bind;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import uk.projectchronos.xplorationreader.ArticlesActivity;
 import uk.projectchronos.xplorationreader.R;
 import uk.projectchronos.xplorationreader.model.Article;
 
@@ -123,9 +132,23 @@ public class ArticleViewHolder extends RecyclerView.ViewHolder {
             dateTextView.setText(String.format("%s %s", context.getResources().getString(R.string.stored), simpleDateFormat.format(storedDate)));
         }
 
-        // Sets abstract
-        abstractTextView.setText(article.get_abstract());
-        //Linkify.addLinks(abstractTextView, Linkify.ALL);
+        // Linkify the TextView
+        Spannable spannable = new SpannableString(Html.fromHtml(article.get_abstract()));
+        Linkify.addLinks(spannable, Linkify.WEB_URLS);
+
+        // Replace each URLSpan by a LinkSpan
+        URLSpan[] spans = spannable.getSpans(0, spannable.length(), URLSpan.class);
+        for (URLSpan urlSpan : spans) {
+            LinkSpan linkSpan = new LinkSpan(context, urlSpan.getURL());
+            int spanStart = spannable.getSpanStart(urlSpan);
+            int spanEnd = spannable.getSpanEnd(urlSpan);
+            spannable.setSpan(linkSpan, spanStart, spanEnd, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+            spannable.removeSpan(urlSpan);
+        }
+
+        // Make sure the TextView supports clicking on Links
+        abstractTextView.setMovementMethod(LinkMovementMethod.getInstance());
+        abstractTextView.setText(spannable, TextView.BufferType.SPANNABLE);
 
         // Sets image view
         Picasso.with(context)
@@ -134,5 +157,36 @@ public class ArticleViewHolder extends RecyclerView.ViewHolder {
                 .fit()
                 .centerInside()
                 .into(agencyImageView);
+    }
+
+    /**
+     * LinkSpan that simply grabs the clicked url and opens it in the CustomTab.
+     */
+    private class LinkSpan extends URLSpan {
+
+        /**
+         * Context.
+         */
+        private Context context;
+
+        /**
+         * URL.
+         */
+        private String url;
+
+        public LinkSpan(Context context, String url) {
+            super(url);
+
+            this.context = context;
+            this.url = url;
+        }
+
+        @Override
+        public void onClick(View view) {
+            Uri uri = Uri.parse(url);
+
+            // Launch custom tab
+            ((ArticlesActivity) context).launchCustomTabs(uri);
+        }
     }
 }
