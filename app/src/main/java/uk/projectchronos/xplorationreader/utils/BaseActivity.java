@@ -38,7 +38,7 @@ public abstract class BaseActivity extends AppCompatActivity {
     /**
      * The TAG used for logging.
      */
-    protected final String TAG = getClass().getCanonicalName();
+    protected static final String TAG = BaseActivity.class.getCanonicalName();
 
     /**
      * Abstract method used in order to return the layout of the Activity.

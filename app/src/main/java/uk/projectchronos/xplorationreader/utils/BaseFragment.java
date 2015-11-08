@@ -41,7 +41,7 @@ public abstract class BaseFragment extends Fragment {
     /**
      * The TAG used for logging.
      */
-    public final String TAG = getClass().getCanonicalName();
+    protected static final String TAG = BaseFragment.class.getCanonicalName();
 
     /**
      * The main content.

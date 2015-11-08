@@ -40,7 +40,7 @@ import java.util.Locale;
 import butterknife.Bind;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
-import uk.projectchronos.xplorationreader.ArticlesActivity;
+import uk.projectchronos.xplorationreader.MainActivity;
 import uk.projectchronos.xplorationreader.R;
 import uk.projectchronos.xplorationreader.model.Article;
 
@@ -186,7 +186,7 @@ public class ArticleViewHolder extends RecyclerView.ViewHolder {
             Uri uri = Uri.parse(url);
 
             // Launch custom tab
-            ((ArticlesActivity) context).launchCustomTabs(uri);
+            ((MainActivity) context).launchCustomTabs(uri);
         }
     }
 }

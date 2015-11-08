@@ -20,6 +20,7 @@ import retrofit.Call;
 import retrofit.http.GET;
 import retrofit.http.Query;
 import uk.projectchronos.xplorationreader.model.ResponseArticlesList;
+import uk.projectchronos.xplorationreader.model.ResponseIndexerList;
 import uk.projectchronos.xplorationreader.model.ResponseKeywordsList;
 
 /**
@@ -32,4 +33,10 @@ public interface ProjectChronosService {
 
     @GET("articles/v04/")
     Call<ResponseKeywordsList> getKeywords(@Query("url") String url);
+
+    @GET("articles/v04/by")
+    Call<ResponseArticlesList> getArticlesBy(@Query("type") String type, @Query("keyword") String keyword, @Query("bookmark") String bookmark);
+
+    @GET("articles/v04/indexer/")
+    Call<ResponseIndexerList> getIndexer();
 }

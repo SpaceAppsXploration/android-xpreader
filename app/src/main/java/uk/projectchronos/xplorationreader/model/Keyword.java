@@ -24,6 +24,18 @@ import com.google.gson.annotations.Expose;
 public class Keyword {
 
     /**
+     * TODO
+     */
+    @Expose
+    private int count;
+
+    /**
+     * TODO only for now for indexer
+     */
+    @Expose
+    private String keyboard;
+
+    /**
      * RelatedUrls ot the keyword.
      */
     @Expose
