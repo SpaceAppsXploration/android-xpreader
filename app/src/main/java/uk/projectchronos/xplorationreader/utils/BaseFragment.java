@@ -39,14 +39,13 @@ import uk.projectchronos.xplorationreader.BuildConfig;
  */
 public abstract class BaseFragment extends Fragment {
     /**
-     * The TAG used for logging.
-     */
-    protected static final String TAG = BaseFragment.class.getCanonicalName();
-
-    /**
      * The main content.
      */
     public View view;
+    /**
+     * The TAG used for logging.
+     */
+    protected String TAG = getClass().getCanonicalName();
 
     /**
      * Abstract method used in order to return the layout of the Activity.

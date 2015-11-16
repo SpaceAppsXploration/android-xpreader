@@ -16,10 +16,15 @@
 
 package uk.projectchronos.xplorationreader.model;
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
 import java.util.List;
+
+import uk.projectchronos.xplorationreader.R;
 
 /**
  * Entity Article.
@@ -288,7 +293,7 @@ public class Article {
     /**
      * Type of article.
      */
-    public enum Type {
+    public enum Type implements Parcelable {
         /**
          * Article.
          */
@@ -335,6 +340,124 @@ public class Article {
          * YouTube documentary.
          */
         @SerializedName("movie")
-        MOVIE
+        MOVIE;
+
+        //
+        static {
+            FEED.menuId = 0;
+            FEED.stringResourceId = R.string.feeds_filter;
+            FEED.value = "feed";
+
+            TWEET.menuId = 1;
+            TWEET.stringResourceId = R.string.tweets_filter;
+            TWEET.value = "tweet";
+
+            MEDIA.menuId = 2;
+            MEDIA.stringResourceId = R.string.medias_filter;
+            MEDIA.value = "media";
+
+            LINK.menuId = 3;
+            LINK.stringResourceId = R.string.links_filter;
+            LINK.value = "link";
+
+            PDF.menuId = 4;
+            PDF.stringResourceId = R.string.pdf_filter;
+            PDF.value = "pdf";
+
+            PAPER.menuId = 5;
+            PAPER.stringResourceId = R.string.papers_filter;
+            PAPER.value = "paper";
+
+            FB_POST.menuId = 6;
+            FB_POST.stringResourceId = R.string.fb_posts_filter;
+            FB_POST.value = "fb";
+
+            MOVIE.menuId = 7;
+            MOVIE.stringResourceId = R.string.movies_filter;
+            MOVIE.value = "movie";
+        }
+
+        /**
+         *
+         */
+        private int menuId;
+        /**
+         *
+         */
+        private int stringResourceId;
+        /**
+         *
+         */
+        private String value;
+        public static final Creator<Type> CREATOR = new Creator<Type>() {
+            @Override
+            public Type createFromParcel(Parcel in) {
+                Type type = Type.values()[in.readInt()];
+                type.setMenuId(in.readInt());
+                type.setStringResourceId(in.readInt());
+                type.setValue(in.readString());
+                return type;
+            }
+
+            @Override
+            public Type[] newArray(int size) {
+                return new Type[size];
+            }
+        };
+
+        @Override
+        public void writeToParcel(Parcel dest, int flags) {
+            dest.writeInt(ordinal());
+            dest.writeInt(menuId);
+            dest.writeInt(stringResourceId);
+            dest.writeString(value);
+        }
+
+        @Override
+        public int describeContents() {
+            return 0;
+        }
+
+        /**
+         * @return
+         */
+        public int getMenuId() {
+            return menuId;
+        }
+
+        /**
+         * @param menuId
+         */
+        public void setMenuId(int menuId) {
+            this.menuId = menuId;
+        }
+
+        /**
+         * @return
+         */
+        public int getStringResourceId() {
+            return this.stringResourceId;
+        }
+
+        /**
+         * @param stringResourceId
+         */
+        private void setStringResourceId(int stringResourceId) {
+            this.stringResourceId = stringResourceId;
+        }
+
+        /**
+         * @return
+         */
+        public String getValue() {
+            return this.value;
+        }
+
+        /**
+         * @param value
+         */
+        private void setValue(String value) {
+            this.value = value;
+        }
     }
 }

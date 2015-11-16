@@ -23,6 +23,10 @@
         <item name="android:windowNoTitle">true</item>
     </style>
 
+    <!-- TODO Toolbar popupTheme theme hardcoded -->
+    <!-- TODO AppBarLayout theme hardcoded -->
+    <!-- TODO TabLayout color hardcoded -->
+
     <style name="AppTheme" parent="AppTheme.Base">
         <!-- Customize your theme here -->
     </style>

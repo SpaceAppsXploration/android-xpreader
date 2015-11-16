@@ -32,6 +32,7 @@
 
     <!-- Article menu -->
     <string name="search_action">Search</string>
+    <string name="sort_action">Sort</string>
     <string name="filter_action">Filter</string>
 
     <string name="fb_posts_filter">Facebook posts</string>
@@ -43,5 +44,9 @@
     <string name="feeds_filter">Articles</string>
     <string name="tweets_filter">Tweets</string>
     <string name="all_filter">All</string>
+    <string name="ascending_order_date">Ascending order</string>
+    <string name="descending_order_date">Descending order</string>
+    <string name="no_order_date">No order</string>
+
 
 </resources>

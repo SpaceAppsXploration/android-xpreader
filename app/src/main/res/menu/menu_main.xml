@@ -20,52 +20,35 @@
     tools:context="uk.projectchronos.xplorationreader.ArticlesActivity">
 
     <item
-        android:id="@+id/menu_filter"
-        android:icon="@drawable/ic_action_filter_list"
-        android:title="@string/filter_action"
-        app:showAsAction="always">
+        android:id="@+id/menu_sort"
+        android:icon="@drawable/ic_action_sort"
+        android:title="@string/sort_action"
+        app:showAsAction="ifRoom">
 
         <menu>
+            <group android:checkableBehavior="single">
+                <item
+                    android:id="@+id/ascending_order_date"
+                    android:title="@string/ascending_order_date" />
 
-            <item
-                android:id="@+id/feeds_filter"
-                android:title="@string/feeds_filter" />
+                <item
+                    android:id="@+id/descending_order_date"
+                    android:title="@string/descending_order_date" />
 
-            <item
-                android:id="@+id/medias_filter"
-                android:title="@string/medias_filter" />
-
-            <item
-                android:id="@+id/links_filter"
-                android:title="@string/links_filter" />
-
-            <item
-                android:id="@+id/pdf_filter"
-                android:title="@string/pdf_filter" />
-
-            <item
-                android:id="@+id/papers_filter"
-                android:title="@string/papers_filter" />
-
-            <item
-                android:id="@+id/movies_filter"
-                android:title="@string/movies_filter" />
-
-            <item
-                android:id="@+id/tweets_filter"
-                android:title="@string/tweets_filter" />
-
-            <item
-                android:id="@+id/fb_post_filter"
-                android:title="@string/fb_posts_filter" />
-
-            <item
-                android:id="@+id/all_filter"
-                android:title="@string/all_filter" />
-
+                <item
+                    android:id="@+id/no_order_date"
+                    android:checked="true"
+                    android:title="@string/no_order_date" />
+            </group>
         </menu>
 
     </item>
+
+    <item
+        android:id="@+id/menu_filter"
+        android:icon="@drawable/ic_action_filter_list"
+        android:title="@string/filter_action"
+        app:showAsAction="always" />
 
     <item
         android:id="@+id/menu_search"

@@ -39,7 +39,7 @@ public class ArticleAdapter extends RecyclerView.Adapter<ArticleViewHolder> {
     private final LayoutInflater layoutInflater;
 
     /**
-     * Articles list binded to the
+     * Articles list binded to the adapter.
      */
     private final List<Article> articleList;
 
@@ -93,9 +93,13 @@ public class ArticleAdapter extends RecyclerView.Adapter<ArticleViewHolder> {
      * @param newArticleList the new articles list.
      */
     public void animateTo(List<Article> newArticleList) {
-        applyAndAnimateRemovals(newArticleList);
-        applyAndAnimateAdditions(newArticleList);
-        applyAndAnimateMovedArticles(newArticleList);
+        if (articleList.containsAll(newArticleList)) {
+            applyAndAnimateRemovals(newArticleList);
+            applyAndAnimateAdditions(newArticleList);
+            applyAndAnimateMovedArticles(newArticleList);
+        } else {
+            addArticles(newArticleList);
+        }
     }
 
     /**
@@ -196,5 +200,9 @@ public class ArticleAdapter extends RecyclerView.Adapter<ArticleViewHolder> {
         final Article model = articleList.remove(fromPosition);
         articleList.add(toPosition, model);
         notifyItemMoved(fromPosition, toPosition);
+    }
+
+    public List<Article> getArticleList() {
+        return articleList;
     }
 }
