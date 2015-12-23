@@ -27,16 +27,15 @@ import uk.projectchronos.xplorationreader.model.ResponseKeywordsList;
  * Interface with all API call to ProjectChronos service.
  */
 public interface ProjectChronosService {
-    //TODO manage in better way api version
-    @GET("articles/v04/")
+    @GET
     Call<ResponseArticlesList> getArticles(@Query("bookmark") String bookmark);
 
-    @GET("articles/v04/")
+    @GET("keywords/filterby")
     Call<ResponseKeywordsList> getKeywords(@Query("url") String url);
 
-    @GET("articles/v04/by")
+    @GET("filterby")
     Call<ResponseArticlesList> getArticlesBy(@Query("type") String type, @Query("keyword") String keyword, @Query("bookmark") String bookmark);
 
-    @GET("articles/v04/indexer/")
+    @GET("indexer/")
     Call<ResponseIndexerList> getIndexer();
 }

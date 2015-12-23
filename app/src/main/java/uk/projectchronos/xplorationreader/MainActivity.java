@@ -85,7 +85,7 @@ public class MainActivity extends BaseActivity implements ConnectionHelper.Callb
     /**
      * Base url for API service.
      */
-    private static final String BASE_URL = "http://hypermedia.projectchronos.eu/"; //"http://rdfendpoints.appspot.com/";
+    private static final String BASE_URL = "http://semantics.projectchronos.eu/";//"http://hypermedia.projectchronos.eu/"; //"http://rdfendpoints.appspot.com/";
 
     /**
      *
