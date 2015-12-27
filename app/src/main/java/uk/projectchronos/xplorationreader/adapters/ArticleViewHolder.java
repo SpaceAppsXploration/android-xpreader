@@ -14,7 +14,7 @@
  *    limitations under the License.
  */
 
-package uk.projectchronos.xplorationreader.adapter;
+package uk.projectchronos.xplorationreader.adapters;
 
 import android.content.Context;
 import android.net.Uri;
@@ -40,9 +40,10 @@ import java.util.Locale;
 import butterknife.Bind;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
-import uk.projectchronos.xplorationreader.MainActivity;
 import uk.projectchronos.xplorationreader.R;
-import uk.projectchronos.xplorationreader.model.Article;
+import uk.projectchronos.xplorationreader.activites.MainActivity;
+import uk.projectchronos.xplorationreader.interfaces.OnCardClickListener;
+import uk.projectchronos.xplorationreader.models.Article;
 
 /**
  *
@@ -102,7 +103,9 @@ public class ArticleViewHolder extends RecyclerView.ViewHolder {
     // OnCardClick listener called
     @OnClick({R.id.article_card_view, R.id.title_text_view, R.id.date_text_view, R.id.abstract_text_view, R.id.agency_image_view})
     void onClick(View view) {
-        onCardClickListener.onClick(view, article);
+        if (onCardClickListener != null) {
+            onCardClickListener.onClick(view, article);
+        }
     }
 
     /**

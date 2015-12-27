@@ -18,9 +18,9 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="uk.projectchronos.xplorationreader.MainActivity.ArticleListFragment">
+    tools:context=".fragments.ArticleListFragment">
 
-    <uk.projectchronos.xplorationreader.adapter.RecyclerViewEmptySupport
+    <uk.projectchronos.xplorationreader.views.RecyclerViewEmptySupport
         android:id="@+id/article_recycler_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"

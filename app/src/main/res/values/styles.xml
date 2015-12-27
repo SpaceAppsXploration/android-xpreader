@@ -16,16 +16,25 @@
 
 <resources>
     <!-- Base application theme -->
-    <style name="AppTheme.Base" parent="Theme.AppCompat.Light.NoActionBar">
+    <style name="AppTheme.Base" parent="Theme.AppCompat.Light">
         <item name="colorPrimary">@color/primary</item>
         <item name="colorPrimaryDark">@color/primary_dark</item>
         <item name="colorAccent">@android:color/white</item>
-        <item name="android:windowNoTitle">true</item>
+    </style>
+
+    <!-- Base application theme without ActionBar -->
+    <style name="AppTheme.BaseNoActionBar" parent="AppTheme.Base">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
     </style>
 
     <!-- TODO Toolbar popupTheme theme hardcoded -->
     <!-- TODO AppBarLayout theme hardcoded -->
     <!-- TODO TabLayout color hardcoded -->
+
+    <style name="AppThemeNoActionBar" parent="AppTheme.BaseNoActionBar">
+        <!-- Customize your theme here -->
+    </style>
 
     <style name="AppTheme" parent="AppTheme.Base">
         <!-- Customize your theme here -->
@@ -39,5 +48,44 @@
     <style name="AppTheme.Launcher.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
 
     <style name="AppTheme.Launcher.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
+
+    <!-- Preference styles -->
+    <style name="preference_section">
+        <item name="android:orientation">vertical</item>
+        <item name="android:layout_marginRight">8dip</item>
+        <item name="android:layout_marginLeft">8dip</item>
+    </style>
+
+    <style name="preference_item">
+        <item name="android:layout_marginTop">8dip</item>
+        <item name="android:layout_marginRight">8dip</item>
+        <item name="android:layout_marginLeft">8dip</item>
+        <item name="paddingStart">8dip</item>
+        <item name="paddingEnd">8dip</item>
+        <item name="android:orientation">vertical</item>
+        <item name="android:gravity">start</item>
+    </style>
+
+    <style name="preference_item_label">
+        <item name="paddingStart">8dip</item>
+        <item name="android:layout_marginLeft">8dip</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:gravity">left</item>
+        <item name="android:textAppearance">@style/TextAppearance.AppCompat.Body1</item>
+        <item name="android:textColor">?android:attr/textColorSecondary</item>
+    </style>
+
+    <!--    <style name="preference_item_content">
+            <item name="android:gravity">left</item>
+            <item name="android:textAppearance">@style/TextAppearance.AppCompat.Subhead</item>
+            <item name="android:textColor">?android:attr/textColorPrimary</item>
+        </style>-->
+
+    <style name="preference_item_edit_content">
+        <item name="paddingStart">4dip</item>
+        <item name="android:layout_marginLeft">4dip</item>
+        <item name="android:textSize">18sp</item>
+    </style>
+
 
 </resources>

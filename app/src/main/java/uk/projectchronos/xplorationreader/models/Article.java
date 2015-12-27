@@ -14,7 +14,7 @@
  *    limitations under the License.
  */
 
-package uk.projectchronos.xplorationreader.model;
+package uk.projectchronos.xplorationreader.models;
 
 import android.os.Parcel;
 import android.os.Parcelable;
@@ -239,7 +239,7 @@ public class Article {
     }
 
     /**
-     * Gets if the article is in graph API.
+     * Gets true if the article is in graph API.
      *
      * @return true if it is in graph API, false otherwise.
      */
@@ -342,58 +342,11 @@ public class Article {
         @SerializedName("movie")
         MOVIE;
 
-        //
-        static {
-            FEED.menuId = 0;
-            FEED.stringResourceId = R.string.feeds_filter;
-            FEED.value = "feed";
-
-            TWEET.menuId = 1;
-            TWEET.stringResourceId = R.string.tweets_filter;
-            TWEET.value = "tweet";
-
-            MEDIA.menuId = 2;
-            MEDIA.stringResourceId = R.string.medias_filter;
-            MEDIA.value = "media";
-
-            LINK.menuId = 3;
-            LINK.stringResourceId = R.string.links_filter;
-            LINK.value = "link";
-
-            PDF.menuId = 4;
-            PDF.stringResourceId = R.string.pdf_filter;
-            PDF.value = "pdf";
-
-            PAPER.menuId = 5;
-            PAPER.stringResourceId = R.string.papers_filter;
-            PAPER.value = "paper";
-
-            FB_POST.menuId = 6;
-            FB_POST.stringResourceId = R.string.fb_posts_filter;
-            FB_POST.value = "fb";
-
-            MOVIE.menuId = 7;
-            MOVIE.stringResourceId = R.string.movies_filter;
-            MOVIE.value = "movie";
-        }
-
-        /**
-         *
-         */
-        private int menuId;
-        /**
-         *
-         */
-        private int stringResourceId;
-        /**
-         *
-         */
-        private String value;
         public static final Creator<Type> CREATOR = new Creator<Type>() {
             @Override
             public Type createFromParcel(Parcel in) {
                 Type type = Type.values()[in.readInt()];
-                type.setMenuId(in.readInt());
+                type.setId(in.readInt());
                 type.setStringResourceId(in.readInt());
                 type.setValue(in.readString());
                 return type;
@@ -405,10 +358,58 @@ public class Article {
             }
         };
 
+        // Static initialization
+        static {
+            FEED.id = 0;
+            FEED.stringResourceId = R.string.feeds_filter;
+            FEED.value = "feed";
+
+            TWEET.id = 1;
+            TWEET.stringResourceId = R.string.tweets_filter;
+            TWEET.value = "tweet";
+
+            MEDIA.id = 2;
+            MEDIA.stringResourceId = R.string.medias_filter;
+            MEDIA.value = "media";
+
+            LINK.id = 3;
+            LINK.stringResourceId = R.string.links_filter;
+            LINK.value = "link";
+
+            PDF.id = 4;
+            PDF.stringResourceId = R.string.pdf_filter;
+            PDF.value = "pdf";
+
+            PAPER.id = 5;
+            PAPER.stringResourceId = R.string.papers_filter;
+            PAPER.value = "paper";
+
+            FB_POST.id = 6;
+            FB_POST.stringResourceId = R.string.fb_posts_filter;
+            FB_POST.value = "fb";
+
+            MOVIE.id = 7;
+            MOVIE.stringResourceId = R.string.movies_filter;
+            MOVIE.value = "movie";
+        }
+
+        /**
+         * The id of the type.
+         */
+        private int id;
+        /**
+         * The string resource of the type.
+         */
+        private int stringResourceId;
+        /**
+         * The effective value of the type
+         */
+        private String value;
+
         @Override
         public void writeToParcel(Parcel dest, int flags) {
             dest.writeInt(ordinal());
-            dest.writeInt(menuId);
+            dest.writeInt(id);
             dest.writeInt(stringResourceId);
             dest.writeString(value);
         }
@@ -419,42 +420,54 @@ public class Article {
         }
 
         /**
-         * @return
+         * Gets the id of the type.
+         *
+         * @return the id of the type.
          */
-        public int getMenuId() {
-            return menuId;
+        public int getId() {
+            return id;
         }
 
         /**
-         * @param menuId
+         * Sets id of the type.
+         *
+         * @param id the value to set.
          */
-        public void setMenuId(int menuId) {
-            this.menuId = menuId;
+        public void setId(int id) {
+            this.id = id;
         }
 
         /**
-         * @return
+         * Gets the stringResourceId of the type.
+         *
+         * @return the stringResourceId of the type.
          */
         public int getStringResourceId() {
             return this.stringResourceId;
         }
 
         /**
-         * @param stringResourceId
+         * Sets stringResourcesId of the type.
+         *
+         * @param stringResourceId the value to set.
          */
         private void setStringResourceId(int stringResourceId) {
             this.stringResourceId = stringResourceId;
         }
 
         /**
-         * @return
+         * Gets the value of the type.
+         *
+         * @return the value of the type.
          */
         public String getValue() {
             return this.value;
         }
 
         /**
-         * @param value
+         * Sets value of the type.
+         *
+         * @param value the value to set.
          */
         private void setValue(String value) {
             this.value = value;

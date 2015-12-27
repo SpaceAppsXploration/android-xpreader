@@ -19,6 +19,7 @@
 
     <!-- Activities titles -->
     <string name="title_activity_articles">Articles</string>
+    <string name="title_activity_settings">Settings</string>
 
     <!-- Activity Articles -->
     <string name="empty_article_list">There are no articles yet for you</string>
@@ -34,6 +35,7 @@
     <string name="search_action">Search</string>
     <string name="sort_action">Sort</string>
     <string name="filter_action">Filter</string>
+    <string name="add_section_action">Add section</string>
 
     <string name="fb_posts_filter">Facebook posts</string>
     <string name="medias_filter">Images</string>
@@ -44,9 +46,20 @@
     <string name="feeds_filter">Articles</string>
     <string name="tweets_filter">Tweets</string>
     <string name="all_filter">All</string>
+
     <string name="ascending_order_date">Ascending order</string>
     <string name="descending_order_date">Descending order</string>
     <string name="no_order_date">No order</string>
 
+    <!-- Settings -->
+    <string name="pref_header_sections">Sections</string>
+
+    <string name="save">Save</string>
+    <string name="cancel">Cancel</string>
+
+    <string name="pref_title_add_section">Add section</string>
+    <string name="pref_hint_add_section">Enter the section name</string>
+    <string name="pref_section_name">Section name</string>
+    <string name="pref_type_selection">Types selection</string>
 
 </resources>

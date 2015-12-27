@@ -14,7 +14,7 @@
  *    limitations under the License.
  */
 
-package uk.projectchronos.xplorationreader.model;
+package uk.projectchronos.xplorationreader.models;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;

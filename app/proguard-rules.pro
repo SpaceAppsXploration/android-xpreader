@@ -24,3 +24,16 @@
 
 # Picasso's rules (see http://square.github.io/picasso/)
 -dontwarn com.squareup.okhttp.**
+
+# Butterknif's rules (see http://jakewharton.github.io/butterknife/)
+-keep class butterknife.** { *; }
+-dontwarn butterknife.internal.**
+-keep class **$$ViewBinder { *; }
+
+-keepclasseswithmembernames class * {
+    @butterknife.* <fields>;
+}
+
+-keepclasseswithmembernames class * {
+    @butterknife.* <methods>;
+}

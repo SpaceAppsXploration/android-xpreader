@@ -14,22 +14,15 @@
  *    limitations under the License.
  */
 
-package uk.projectchronos.xplorationreader.adapter;
-
-import android.view.View;
-
-import uk.projectchronos.xplorationreader.model.Article;
+package uk.projectchronos.xplorationreader.interfaces;
 
 /**
- * Interface for card click.
+ *
  */
-public interface OnCardClickListener {
+public interface OnDialogClosedListener {
 
     /**
-     * OnClick method.
-     *
-     * @param view    the view clicked.
-     * @param article the article binded to view clicked.
+     * @param positiveResult
      */
-    void onClick(View view, Article article);
+    void onDialogClosed(boolean positiveResult);
 }

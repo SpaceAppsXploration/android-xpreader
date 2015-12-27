@@ -19,9 +19,9 @@ package uk.projectchronos.xplorationreader.api;
 import retrofit.Call;
 import retrofit.http.GET;
 import retrofit.http.Query;
-import uk.projectchronos.xplorationreader.model.ResponseArticlesList;
-import uk.projectchronos.xplorationreader.model.ResponseIndexerList;
-import uk.projectchronos.xplorationreader.model.ResponseKeywordsList;
+import uk.projectchronos.xplorationreader.models.ResponseArticlesList;
+import uk.projectchronos.xplorationreader.models.ResponseIndexerList;
+import uk.projectchronos.xplorationreader.models.ResponseKeywordsList;
 
 /**
  * Interface with all API call to ProjectChronos service.

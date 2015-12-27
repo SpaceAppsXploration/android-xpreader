@@ -14,7 +14,7 @@
  *    limitations under the License.
  */
 
-package uk.projectchronos.xplorationreader.adapter;
+package uk.projectchronos.xplorationreader.adapters;
 
 import android.content.Context;
 import android.support.v7.widget.RecyclerView;
@@ -26,7 +26,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import uk.projectchronos.xplorationreader.R;
-import uk.projectchronos.xplorationreader.model.Article;
+import uk.projectchronos.xplorationreader.interfaces.OnCardClickListener;
+import uk.projectchronos.xplorationreader.models.Article;
 
 /**
  * Adapter for Articles.

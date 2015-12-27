@@ -56,4 +56,8 @@
         android:title="@string/search_action"
         app:showAsAction="ifRoom" />
 
+    <item
+        android:id="@+id/menu_add_section"
+        android:title="@string/add_section_action"
+        app:showAsAction="never" />
 </menu>
