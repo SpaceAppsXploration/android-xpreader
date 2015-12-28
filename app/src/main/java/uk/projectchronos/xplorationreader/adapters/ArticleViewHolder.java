@@ -130,9 +130,9 @@ public class ArticleViewHolder extends RecyclerView.ViewHolder {
         Date publishedDate = article.getPublished();
 
         if (publishedDate != null) {
-            dateTextView.setText(String.format("%s (%s %s)", simpleDateFormat.format(publishedDate), context.getResources().getString(R.string.stored), simpleDateFormat.format(storedDate)));
+            dateTextView.setText(String.format(context.getResources().getString(R.string.date_full), simpleDateFormat.format(publishedDate), simpleDateFormat.format(storedDate)));
         } else {
-            dateTextView.setText(String.format("%s %s", context.getResources().getString(R.string.stored), simpleDateFormat.format(storedDate)));
+            dateTextView.setText(String.format(context.getResources().getString(R.string.date_mini), simpleDateFormat.format(storedDate)));
         }
 
         // Linkify the TextView
