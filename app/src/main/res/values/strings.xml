@@ -28,7 +28,8 @@
     <string name="captive_error">You are not online, maybe you are in a captive network, please sign-in</string>
 
     <!-- Article card -->
-    <string name="stored">stored</string>
+    <string name="date_full">%1$s (stored %2$s)</string>
+    <string name="date_mini">stored %1$s</string>
     <string name="agency_icon_description">Agency icon</string>
 
     <!-- Article menu -->
