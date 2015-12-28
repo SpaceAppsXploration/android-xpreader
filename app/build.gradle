@@ -38,19 +38,52 @@ android {
 
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
+
+    // Google support Libraries
     compile 'com.android.support:appcompat-v7:23.1.1'
     compile 'com.android.support:cardview-v7:23.1.1'
-    compile 'com.android.support:recyclerview-v7:23.1.1'
-    compile 'com.android.support:design:23.1.1'
     compile 'com.android.support:customtabs:23.1.1'
-    compile 'com.squareup.retrofit:retrofit:2.0.0-beta1'
-    compile 'com.squareup.retrofit:converter-gson:2.0.0-beta1'
-    compile 'com.squareup.picasso:picasso:2.5.2'
-    compile 'com.google.code.gson:gson:2.4'
-    compile 'com.jakewharton:butterknife:7.0.1'
-    compile 'com.github.greenfrvr:hashtag-view:1.1.0'
-    compile 'org.jetbrains:annotations:13.0'
+    compile 'com.android.support:design:23.1.1'
+    compile 'com.android.support:recyclerview-v7:23.1.1'
     compile 'com.android.support:support-v4:23.1.1'
+
+    // Retrofit: A type-safe HTTP client for Android and Java
+    compile 'com.squareup.retrofit:adapter-rxjava:2.0.0-beta1'
+    compile 'com.squareup.retrofit:converter-gson:2.0.0-beta1'
+    compile 'com.squareup.retrofit:retrofit:2.0.0-beta1'
+
+    // gson: A Java serialization library that can convert Java Objects into JSON and back
+    compile 'com.google.code.gson:gson:2.4'
+
+    // Picasso: A powerful image downloading and caching library for Android
+    compile 'com.squareup.picasso:picasso:2.5.2'
+
+    // ButterKnife: Field and method binding for Android views
+    compile 'com.jakewharton:butterknife:7.0.1'
+
+    // HashtagView: Android fully customizable widget for representing data like hashtags collection
+    // and similiar
+    compile 'com.github.greenfrvr:hashtag-view:1.2.1'
+
+    // IntelliJ IDEA Annotations: A set of annotations used for code inspection support and code
+    // documentation
+    compile 'org.jetbrains:annotations:13.0'
+
+    // RxAndroid: Android specific bindings for RxJava
+    compile 'io.reactivex:rxandroid:1.1.0'
+
+    // Because RxAndroid releases are few and far between, it is recommended you also
+    // explicitly depend on RxJava's latest version for bug fixes and new features
+
+    // RxJava: a Java VM implementation of Reactive Extensions: a library for composing asynchronous
+    // and event-based programs by using observable sequences
+    compile 'io.reactivex:rxjava:1.1.0'
+
+    // RxLifecycle: Lifecycle handling APIs for Android apps using RxJava
+    compile 'com.trello:rxlifecycle:0.4.0'
+
+    // If you want pre-written Activities and Fragments you can subclass as providers
+    compile 'com.trello:rxlifecycle-components:0.4.0'
 }
 
 idea {

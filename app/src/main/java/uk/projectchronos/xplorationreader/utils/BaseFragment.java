@@ -23,11 +23,12 @@
 package uk.projectchronos.xplorationreader.utils;
 
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+
+import com.trello.rxlifecycle.components.support.RxFragment;
 
 import uk.projectchronos.xplorationreader.BuildConfig;
 
@@ -37,7 +38,7 @@ import uk.projectchronos.xplorationreader.BuildConfig;
  * @author pincopallino93
  * @version 1.2
  */
-public abstract class BaseFragment extends Fragment {
+public abstract class BaseFragment extends RxFragment {
     /**
      * The main content.
      */

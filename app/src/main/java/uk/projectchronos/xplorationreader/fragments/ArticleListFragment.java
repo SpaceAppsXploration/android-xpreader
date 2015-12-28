@@ -26,7 +26,8 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.LinearLayout;
 
-import java.io.IOException;
+import com.trello.rxlifecycle.FragmentEvent;
+
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -39,9 +40,11 @@ import java.util.Map;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
-import retrofit.Call;
-import retrofit.Callback;
 import retrofit.Response;
+import rx.Observable;
+import rx.Observer;
+import rx.android.schedulers.AndroidSchedulers;
+import rx.schedulers.Schedulers;
 import uk.projectchronos.xplorationreader.R;
 import uk.projectchronos.xplorationreader.activites.MainActivity;
 import uk.projectchronos.xplorationreader.adapters.ArticleAdapter;
@@ -375,63 +378,68 @@ public class ArticleListFragment extends BaseFragment {
      * @param bookmark
      */
     private void getArticlesBy(final Article.Type type, String keyword, final String bookmark) {
-        Log.i(TAG, "getArticlesBy called");
+        Log.d(TAG, "getArticlesBy called");
+
         // Creates asynchronous call
-        Call<ResponseArticlesList> articles = mainActivity.getProjectChronosService().getArticlesBy(type.getValue(), keyword, bookmark);
-        articles.enqueue(new Callback<ResponseArticlesList>() {
-            @Override
-            public void onResponse(Response<ResponseArticlesList> response) {
-                if (response.isSuccess() && response.body() != null) {
-                    // Gets response's body
-                    ResponseArticlesList responseArticlesList = response.body();
-                    List<Article> articleListFetched = responseArticlesList.getArticles();
-
-                    try {
-                        getList(type).addAll(articleListFetched);
-
-                        showArticles();
-                    } catch (Exception e) {
-                        Log.e(TAG, "Error in type");
+        Observable<Response<ResponseArticlesList>> articles = mainActivity.getProjectChronosService().getArticlesBy(type.getValue(), keyword, bookmark);
+        articles.subscribeOn(Schedulers.newThread())
+                .compose(this.<Response<ResponseArticlesList>>bindUntilEvent(FragmentEvent.DESTROY))
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Observer<Response<ResponseArticlesList>>() {
+                    @Override
+                    public void onCompleted() {
+                        Log.d(TAG, "onCompleted in getArticlesBy()");
                     }
 
-                    // Prefetches articles
-                    mainActivity.prefetchArticles(articleListFetched);
-
-                    // Gets next page from next url
-                    String nextUrl = responseArticlesList.getNext();
-
-                    // For all articles
-                    for (Article article : articleListFetched) {
-                        // Gets all keywords associated
-                        getKeywords(article);
+                    @Override
+                    public void onError(Throwable e) {
+                        Log.e(TAG, "onError in getArticlesBy()", e);
                     }
 
-                    try {
-                        if (nextUrl != null) {
-                            next = HTTPUtil.splitQuery(new URL(nextUrl)).get("bookmark").get(0);
+                    @Override
+                    public void onNext(Response<ResponseArticlesList> responseArticlesListResponse) {
+                        Log.d(TAG, "onNext in getArticlesBy()");
+                        if (responseArticlesListResponse.isSuccess() && responseArticlesListResponse.body() != null) {
+                            // Gets response's body
+                            ResponseArticlesList responseArticlesList = responseArticlesListResponse.body();
+                            List<Article> articleListFetched = responseArticlesList.getArticles();
+
+                            try {
+                                getList(type).addAll(articleListFetched);
+
+                                showArticles();
+                            } catch (Exception e) {
+                                Log.e(TAG, "Error in type");
+                            }
+
+                            // Prefetches articles
+                            mainActivity.prefetchArticles(articleListFetched);
+
+                            // Gets next page from next url
+                            String nextUrl = responseArticlesList.getNext();
+
+                            // For all articles
+                            for (Article article : articleListFetched) {
+                                // Gets all keywords associated
+                                getKeywords(article);
+                            }
+
+                            try {
+                                if (nextUrl != null) {
+                                    next = HTTPUtil.splitQuery(new URL(nextUrl)).get("bookmark").get(0);
+                                } else {
+                                    //TODO add footer for last element? Issue #26
+                                }
+                            } catch (MalformedURLException e) {
+                                Log.e(TAG, String.format("%s could not be parsed as a URL", nextUrl), e);
+                                //TODO: Issue #11
+                            }
                         } else {
-                            //TODO add footer for last element?
+                            // TODO: manage in better way error
+                            Log.e(TAG, String.format("Response not succeed in getArticlesBy: %s", responseArticlesListResponse.errorBody().toString()));
                         }
-                    } catch (MalformedURLException e) {
-                        Log.e(TAG, String.format("%s could not be parsed as a URL", nextUrl), e);
-                        //TODO: Issue #11
                     }
-                } else {
-                    // TODO: manage in better way error
-                    try {
-                        Log.e(TAG, String.format("Response not succeed in getArticlesBy: %s", response.errorBody().string()));
-                    } catch (IOException e) {
-                        Log.e(TAG, "onResponse in getArticlesBy", e);
-                    }
-                }
-            }
-
-            @Override
-            public void onFailure(Throwable t) {
-                // TODO: manage in better way error
-                Log.e(TAG, "Error in onFailure in getArticlesBy", t);
-            }
-        });
+                });
     }
 
     /**
@@ -481,40 +489,45 @@ public class ArticleListFragment extends BaseFragment {
      * @param article the Article in wich put keywords.
      */
     private void getKeywords(final Article article) {
+        Log.d(TAG, "getKeywords called");
         String url = null;
         try {
             url = HTTPUtil.splitQuery(new URL(article.getKeywordsUrl())).get("url").get(0);
         } catch (MalformedURLException exception) {
-            Log.e(TAG, "error in getKeywords", exception);
+            Log.e(TAG, "Error in getKeywords", exception);
         }
 
         // Creates asynchronous call
-        Call<ResponseKeywordsList> keywords = mainActivity.getProjectChronosService().getKeywords(url);
-        keywords.enqueue(new Callback<ResponseKeywordsList>() {
-            @Override
-            public void onResponse(Response<ResponseKeywordsList> response) {
-                if (response.isSuccess()) {
-                    // Gets response's body
-                    ResponseKeywordsList responseKeywordsList = response.body();
-
-                    // Sets article's keywords list
-                    article.setKeywordsList(responseKeywordsList.getKeywords());
-                } else {
-                    // TODO: manage in better way error
-                    try {
-                        Log.e(TAG, String.format("Response not succeed in getKeywords: %s", response.errorBody().string()));
-                    } catch (IOException e) {
-                        Log.e(TAG, "onResponse in getKeywords", e);
+        Observable<Response<ResponseKeywordsList>> keywords = mainActivity.getProjectChronosService().getKeywords(url);
+        keywords.subscribeOn(Schedulers.newThread())
+                .observeOn(AndroidSchedulers.mainThread())
+                .compose(this.<Response<ResponseKeywordsList>>bindUntilEvent(FragmentEvent.DESTROY))
+                .subscribe(new Observer<Response<ResponseKeywordsList>>() {
+                    @Override
+                    public void onCompleted() {
+                        Log.d(TAG, "onCompleted in getKeywords()");
                     }
-                }
-            }
 
-            @Override
-            public void onFailure(Throwable t) {
-                // TODO: manage in better way error
-                Log.e(TAG, "Error in onFailure in getKeywords", t);
-            }
-        });
+                    @Override
+                    public void onError(Throwable e) {
+                        Log.e(TAG, "onError in getKeywords()", e);
+                    }
+
+                    @Override
+                    public void onNext(Response<ResponseKeywordsList> responseKeywordsListResponse) {
+                        Log.d(TAG, "onNext in getKeywords()");
+                        if (responseKeywordsListResponse.isSuccess()) {
+                            // Gets response's body
+                            ResponseKeywordsList responseKeywordsList = responseKeywordsListResponse.body();
+
+                            // Sets article's keywords list
+                            article.setKeywordsList(responseKeywordsList.getKeywords());
+                        } else {
+                            // TODO: manage in better way error
+                            Log.e(TAG, String.format("Response not succeed in getKeywords: %s", responseKeywordsListResponse.errorBody().toString()));
+                        }
+                    }
+                });
     }
 
     /**

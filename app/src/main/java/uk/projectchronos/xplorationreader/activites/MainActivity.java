@@ -47,6 +47,7 @@ import butterknife.Bind;
 import butterknife.ButterKnife;
 import retrofit.GsonConverterFactory;
 import retrofit.Retrofit;
+import retrofit.RxJavaCallAdapterFactory;
 import uk.projectchronos.xplorationreader.BuildConfig;
 import uk.projectchronos.xplorationreader.R;
 import uk.projectchronos.xplorationreader.adapters.SectionsPagerAdapter;
@@ -364,6 +365,7 @@ public class MainActivity extends BaseActivity implements ConnectionHelper.Callb
         // Create Retrofit service with our KeywordAdapter
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(BASE_URL)
+                .addCallAdapterFactory(RxJavaCallAdapterFactory.create())
                 .addConverterFactory(GsonConverterFactory.create(gson))
                 .build();
 

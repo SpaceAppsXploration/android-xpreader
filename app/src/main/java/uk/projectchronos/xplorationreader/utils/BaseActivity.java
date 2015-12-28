@@ -23,8 +23,9 @@
 package uk.projectchronos.xplorationreader.utils;
 
 import android.os.Bundle;
-import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+
+import com.trello.rxlifecycle.components.support.RxAppCompatActivity;
 
 import uk.projectchronos.xplorationreader.BuildConfig;
 
@@ -34,7 +35,7 @@ import uk.projectchronos.xplorationreader.BuildConfig;
  * @author pincopallino93
  * @version 1.3
  */
-public abstract class BaseActivity extends AppCompatActivity {
+public abstract class BaseActivity extends RxAppCompatActivity {
     /**
      * The TAG used for logging.
      */

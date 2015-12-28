@@ -16,9 +16,10 @@
 
 package uk.projectchronos.xplorationreader.api;
 
-import retrofit.Call;
+import retrofit.Response;
 import retrofit.http.GET;
 import retrofit.http.Query;
+import rx.Observable;
 import uk.projectchronos.xplorationreader.models.ResponseArticlesList;
 import uk.projectchronos.xplorationreader.models.ResponseIndexerList;
 import uk.projectchronos.xplorationreader.models.ResponseKeywordsList;
@@ -28,14 +29,14 @@ import uk.projectchronos.xplorationreader.models.ResponseKeywordsList;
  */
 public interface ProjectChronosService {
     @GET
-    Call<ResponseArticlesList> getArticles(@Query("bookmark") String bookmark);
+    Observable<Response<ResponseArticlesList>> getArticles(@Query("bookmark") String bookmark);
 
     @GET("keywords/filterby")
-    Call<ResponseKeywordsList> getKeywords(@Query("url") String url);
+    Observable<Response<ResponseKeywordsList>> getKeywords(@Query("url") String url);
 
     @GET("filterby")
-    Call<ResponseArticlesList> getArticlesBy(@Query("type") String type, @Query("keyword") String keyword, @Query("bookmark") String bookmark);
+    Observable<Response<ResponseArticlesList>> getArticlesBy(@Query("type") String type, @Query("keyword") String keyword, @Query("bookmark") String bookmark);
 
     @GET("indexer/")
-    Call<ResponseIndexerList> getIndexer();
+    Observable<Response<ResponseIndexerList>> getIndexer();
 }
